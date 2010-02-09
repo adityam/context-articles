@@ -1,0 +1,358 @@
+
+\usemodule[tugboat]
+
+\input tugboat.dates
+\def\tubpage{1001}
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+ \setvariables
+    [tugboat]
+    [year=\tubyear,
+     volume=\tubvol,
+     number=\tubnum,
+     page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Indentations},
+     author={Aditya Mahajan},
+    address={University of Michigan},
+      email={adityam (at) umich dot edu},
+  ]
+
+% Typo in core-spa.tex
+
+\unprotect
+
+\defineindentingmethod [\v!reset]  {\indentfirstparagraphtrue
+                                    \parindent\zeropoint
+                                    \chardef\indentingtoggle\zerocount}
+
+\protect
+
+\hyphenation
+  {indentnext
+   setupindenting}
+
+\starttext
+\StartArticle 
+
+\StartAbstract
+  \CONTEXT's indentation mechanism can be a bit confusing. This
+  article explains why \CONTEXT\ indentation works the way it does and
+  how to set up indentation to achieve desired behaviour.
+\StopAbstract
+
+\section Introduction %{{{1
+
+In plain \TEX, controlling indentation is simple: The user sets a value for
+\tex{parindent}, and each new paragraph is indented by that value, unless
+explicitly begun with \tex{noindent}. Environments can provide a
+\tex{noindent} at the end of their definitions, and if the user wants to
+overrule that, he can add an explicit \tex{indent} at the beginning of the next
+paragraph. For the most part, \LATEX\ follows the same convention.
+
+So,
+understanding indentation in plain \TEX\ and \LATEX\ boils down to
+this: set a
+value for \tex{parindent}, and start a new paragraph (i.e., leave an empty
+line) whenever you want indentation. For example, \LATEX\ usually does not
+indent the first line after a sectioning command. If you want to indent the
+first line after a sectioning command you use the \type{indentfirst} package
+(which is part of the required \LATEX\ bundle). If you want to indent the
+paragraph after an environment, you leave a blank line after the end of the
+environment; if you do not want to indent after the end of an environment, you
+do not leave a blank line. It takes a while to get used to, but the rules are
+easy to remember and eventually you do not need to even think about
+indentation; it becomes a matter of habit.
+
+Indentations in \CONTEXT\ are a bit different; and sometimes difficult
+to understand. In this article I hope to explain how \CONTEXT\ does
+indentations.  First, let's understand why \CONTEXT\ does indentations
+differently; why does it not simply follow the time|-|tested approach
+of plain \TEX\ and \LATEX? The way I understand it, the reason is that Hans
+Hagen, the author of \CONTEXT, prefers 
+{\em spaced out} markup\Dash surrounding each environment by empty
+lines\Dash which
+makes it
+easy to see where an environment starts and ends while reading the
+source file. However, this style means that the \quotation{indentation
+  after empty lines} paradigm of plain \TEX\ and \LATEX\ cannot be
+used for indentations. So, \CONTEXT\ provides an alternative. As
+with other things in \CONTEXT, this alternative is consistent and easy
+to configure; but if you are used to other \TEX\ formats it takes some time to
+get comfortable with it.
+
+\section The basics %{{{1
+
+Indentation involves two things: when to indent, and how much to indent. In
+\CONTEXT, these can be specified using \tex{setupindenting[...]}. There
+are two types of keys for this command:
+\startitemize[n,intro]
+\item To specify {\em when to indent}:
+  \type{never} or \type{always}, (equivalently, \type{no} or \type{yes}),
+  \type{odd} or \type{even}, and \type{first} or \type{next}.
+
+\item To specify {\em how much to indent}:
+  \type{none}, \type{small}, \type{medium}, \type{big}, or a specific
+  dimension. \type{small} corresponds to 1em, \type{medium} to 1.5em, and
+  \type{big} to 2em.
+
+\stopitemize
+
+Suppose we want to indent all paragraphs by 20pt, which is the
+convention followed by this journal: we can use
+\tex{setupindenting[20pt, yes]}. This is what one typically uses in a
+document. The other keys are needed only for special cases (like
+typesetting quotations and verses), and we will not talk about them in
+this article.
+
+
+
+\tex{setupindenting} does not take care of indenting after environments,
+such as \CONTEXT's itemizes (approximately \LATEX\ \type{itemize} and
+\type{enumerate}), enumerations ($\approx$ \LATEX\ \type{theorem}),
+definitions ($\approx$ \LATEX\ \type{subparagraph}), formulas and
+floats. It also does not take care of indenting after heads such as
+chapters, sections, and subsections.
+
+The setup command of these environments provides an \type{indentnext} key to
+configure the indentation behaviour after the environment. The
+\type{indentnext} key can take one of three values: \type{yes}, \type{no}, and
+\type{auto}. If \type{indentnext=yes} then the paragraph after the end of the
+environment is always indented; if \type{indentnext=no} then the next paragraph
+is never indented; if \type{indentnext=auto} then the next paragraph is
+indented only if there is a blank space after the environment. Setting
+\type{indentnext=auto} is equivalent to the default plain \TEX\ and \LATEX\
+behaviour. 
+
+Let us provide a couple of examples. Suppose we do not want paragraphs after
+itemize to be indented; then we can say
+
+\startbuffer
+\setupitemgroup[itemize][indentnext=no]
+\stopbuffer
+
+\typebuffer
+
+\startmode[check]
+\start
+\getbuffer
+
+\startitemize[n]
+\item one
+\item two
+\stopitemize
+
+This paragraph should not be indented
+\stop
+\stopmode
+
+\noindentation If we want paragraphs after section heads to be indented, we can say
+
+\startbuffer
+\setuphead[section][indentnext=yes]
+\stopbuffer
+
+\typebuffer
+
+\startmode[check]
+\start
+\getbuffer
+
+\section{Indented section}
+
+This should be indented
+
+\stop
+\stopmode
+
+\noindentation If we want the paragraphs after all sectioning heads to be
+indented, we can say
+
+\startbuffer
+\setupheads[indentnext=yes]
+\stopbuffer
+
+\typebuffer
+
+\noindentation If we want paragraphs after formulas to be indented only if we
+leave a blank space after them, we can say
+
+\startbuffer
+\setupformulas[indentnext=auto]
+\stopbuffer
+
+\typebuffer
+
+\startmode[check]
+\start
+\getbuffer
+\startformula
+  E = mc^2
+\stopformula
+This should not be indented
+
+\startformula
+ a^2 + b^2 = c^2 
+\stopformula
+
+This should be indented
+\stop
+\stopmode
+
+There is one case that is not taken care of by \tex{setupindenting} and the
+\type{indentnext} key: indentation of paragraphs inside multi|-|paragraph
+environments such as itemizes, descriptions, and enumerations. By default
+\CONTEXT\ does not indent such paragraphs. The setup commands of these
+environments provides an \type{indenting} key to configure the indentation
+behaviour of paragraphs inside these environments. This key takes the same
+values as the arguments of \tex{setupindenting} command. For example, if we set
+\startbuffer[itemize]
+\setupitemgroup[itemize][indenting={40pt,yes}]
+\stopbuffer
+
+\typebuffer[itemize]
+
+\noindentation then the following (\type{|-|} in \CONTEXT\
+indicates a hyphen after which further hyphenation is allowed;
+see \type|http://www.logosrl.it/context/modules/|\hfil\break
+\type|current/singles/lang-mis_ebook.pdf| for more):
+
+\startbuffer[example]
+\startitemize
+\item This is an example of a multi|-|paragraph 
+      item inside an itemize environment.
+
+      This second paragraph is indented by 40pt
+      (double the normal indentation).
+\stopitemize
+\stopbuffer
+
+\typebuffer[example]
+
+\noindentation gives
+
+\blackrule[width=\textwidth,height=0.6pt]
+
+\start
+\getbuffer[itemize,example]
+\stop
+\blackrule[width=\textwidth,height=0.6pt]
+
+
+\starthiding
+\section Indentation after floats
+
+This is a mess. This will take a lot of time to explain.
+\stophiding
+
+\section Manual indentation %{{{1
+
+No matter how careful we are with all the settings, there are some cases which
+cannot be taken care of by automatic indentation, and we have to tell \CONTEXT\
+how to indent. Plain \TEX\ (and \LATEX) provide the \tex{indent} and \tex{noindent}
+commands for explicitly indenting and preventing indenting of a paragraph. These
+commands are defined in \CONTEXT\ but are not hooked into the \CONTEXT\
+indentation mechanism. Instead, \CONTEXT\ provides \hbox{\tex{indentation}} and
+\tex{noindentation} which achieve the same effect.
+
+Notice that in this article, paragraphs after itemize are not indented. This is
+because the itemize environment has been set up (according to the general
+style of the journal) as
+\starttyping
+\setupitemgroup [itemize] [indentnext=no]
+\stoptyping
+
+Now, if we want to indent after an itemize, starting the next paragraph
+with \tex{indent} does not work; to get indentation we have to say
+\tex{indentation}. For example,
+
+\startbuffer
+\startitemize[n]
+\item A dummy list
+\item To check \tex{indent}
+\stopitemize
+
+\indent This paragraph is not indented. The 
+\tex{indent} command does not work here.
+
+\startitemize[n]
+\item Another dummy list
+\item To check \tex{indentation}
+\stopitemize
+
+\indentation This paragraph will be indented
+because we used \tex{indentation} instead.
+\stopbuffer
+
+\typebuffer
+
+\noindentation gives
+
+\blackrule[width=\textwidth,height=0.6pt]
+
+\getbuffer
+
+\blackrule[width=\textwidth,height=0.6pt]
+
+\section Beware of typos %{{{1
+
+\CONTEXT\ defines two more commands not commonly used:
+\tex{indenting} and \tex{noindenting}.  \tex{indenting} is similar to
+\tex{setupindenting} and is provided for backward compatibility;
+\tex{noindenting} is equivalent to
+\tex{setupindenting[no]}. Unfortunately, these commands sound very
+similar to \tex{indentation} and \tex{noindentation}, thus can be easily 
+used by mistake. If you happen to write \tex{noindenting} instead of
+\tex{noindentation} in a document, it can take a while to debug. I have
+been bitten by this mistake once too often so I have invented a mnemonic
+to avoid it: 
+\startnarrower
+  {\em shun (-tion) the -ing}|<|use indentation 
+\stopnarrower 
+\noindentation I admit, this is not a clever mnemonic, but it has
+saved me quite a few trips to the manual.
+
+\section Conclusion %{{{1
+
+This article explained how indentation works in \CONTEXT. By default, \CONTEXT\
+does not enable {\em any} indentation; the user is expected to set up
+indentation as he wants. I hope this article has helped to illustrate how to
+set up indentation for different environments. 
+
+
+
+% Odd, Even %{{{1
+\startmode[check]
+\startbuffer
+Par 1 \par Par 2 \par Par 3 \par
+\stopbuffer
+
+{\setupindenting[reset,20pt,yes,first] \getbuffer}
+
+{\setupindenting[reset,20pt,no,first] \getbuffer}
+
+{\setupindenting[reset,20pt,yes,next] \getbuffer}
+
+{\setupindenting[reset,20pt,no,next] \getbuffer}
+
+{\setupindenting[reset,20pt,yes,odd] \getbuffer}
+
+{\setupindenting[reset,20pt,no,odd] \getbuffer}
+
+{\setupindenting[reset,20pt,yes,even] \getbuffer}
+
+{\setupindenting[reset,20pt,no,even] \getbuffer}
+
+\stopmode
+
+% }}}
+
+\StopArticle
+\stoptext

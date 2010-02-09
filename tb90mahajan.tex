@@ -1,0 +1,514 @@
+\enablemode[aditya]
+
+% Preamble %{{{
+
+\usemodule[tugboat]
+
+\setupcolors[conversion=never] %otherwise \tracetablestrue gives greyscale
+
+\setuplines[space=yes,
+            before={\blank[tugblank]\bgroup\switchtobodyfont[small]\tt},
+            after={\endgraf\egroup\blank[tugblank]}]
+
+%\input tugboat.dates
+
+%\def\startpage{501}
+%\setfirstpageafter{abstracts}
+
+% I wanted to check things without the manual corrections. Just remove
+% \enablemode[aditya] from the top to get back the maual corrections.
+
+\doifmodeelse{aditya}
+ {\let\myparindent\relax % This interferes on my machine
+  \let\mystrut\relax}%This is for testing
+ {\def\myparindent{\leavevmode\kern20pt }
+  \def\mystrut{\vrule width0pt height2.6ex depth0pt }}
+
+%\abbreviation {HTML}  {Hyper Text Markup Language} 
+\def\HTML{\acro{HTML}}
+
+%LongLines % So that tables appear in the middle
+           % No, this makes a mess of rules in the table.
+
+\def\gettablebuffer
+  {\dosingleargument\dogettablebuffer}
+
+\def\dogettablebuffer[#1]%
+  {\startlinecorrection
+    \midaligned
+      \bgroup
+      \doifelsenothing{#1}
+        {\getbuffer}%
+        {\getbuffer[#1]}%
+      \egroup
+    \stoplinecorrection}
+
+\def\typetablebuffer
+  {\dosingleargument\dotypetablebuffer}
+
+\def\dotypetablebuffer[#1]%
+  {\blank[small]%
+   \startpacked
+    \typebuffer[#1]%
+    \stoppacked
+   \blank[small]}
+    
+\hyphenation
+ {start-table
+  start-tables
+  start-tabulate
+  start-line-table
+  stop-table
+  stop-tables
+  stop-tabulate
+  stop-line-table
+  Wich-ura
+  mne-mon-ic}
+
+
+%}}}
+
+% References {{{
+% I could not get the bib module to print urls. Since urls are necessary, I
+% reverted back to old style of placing urls as footnotes.
+
+% \def\cite[#1]%
+%   {\footnote{\mystrut \advance\rightskip by 0pt plus1pc
+%    \hyphenpenalty=10000
+%    \tt \from[#1]\par}}
+
+\definereferenceformat[cite][left={[},right={]}]
+
+\useURL[tablemacros][http://www.pctex.com/kb/47.html]
+\useURL[beginnersmanual][http://www.pragma-ade.com/show-man-1.htm]
+\useURL[tabledocumentation][http://store.pctexstore.com/maclimprom.html]
+\useURL[core-tab][http://www.logosrl.it/context/modules/current/singles/core-tab_ebook.pdf]
+\useURL[wiki-tables][http://wiki.contextgarden.net/Table]
+\useURL[HansMaps][http://www.ntg.nl/maps/pdf/22_28.pdf]
+\useURL[NaturalTables][http://www.pragma-ade.com/general/manuals/enattab.pdf]
+\useURL[Willi][http://dl.contextgarden.net/myway/NaturalTables.pdf]
+\useURL[wiki-comparison][http://wiki.contextgarden.net/Tables_Overview]
+
+
+% }}}
+
+\setuptyping[style={\tttf}]
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+\setupcolumns[balance=no]
+
+% \setvariables
+%   [tugboat]
+%   [year=\tubyear,
+%    volume=\tubvol,
+%    number=\tubnum,
+%    page=\startpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Table macros},
+   subtitle={Table Macros}, % Subtitle does not work :-(
+     author={Aditya Mahajan},
+    address={University of Michigan},
+      email={adityam (at) umich dot edu},
+  ]
+
+
+\starttext
+\StartArticle
+
+\StartAbstract 
+  \CONTEXT\ has four different table building macros. In the author's view the
+  \type{table} macros, which are the oldest of the four, are the easiest to
+  use for simple tables. This article gives a gentle introduction to these
+  macros. 
+\StopAbstract
+
+\section Introduction %{{{1
+
+Tables provide visual representation of information; understanding how to
+build them in a markup language can be difficult and frustrating. To make
+matters especially confusing for a new user, \CONTEXT\ provides four different
+mechanisms to build tables |<|tables, tabulations, line tables, and natural
+tables|>| and the user must decide which  one of the four to use. This can be
+a difficult decision, because there is no \quotation{one size fits all}
+solution. Each mechanism has its own strengths and weaknesses, and the best
+match depends on the application.
+
+Tables can get fairly complicated. They can have fancy horizontal and vertical
+lines, colored rows, sophisticated \METAPOST\ backgrounds for cells, and/or
+may need to be split across multiple pages. Some mechanisms are better
+than others at handling such advanced features.
+
+However, most users rarely need these features; for the most part, they
+just want a simple, publication quality table. I think that out of the
+four table building macros, the \mono{table} macros, which are based on
+Michael Wichura's \TABLE\ package~\cite[tablemacros], are the easiest to
+use for simple tables.
+
+\myparindent
+I should note that this mechanism is no longer actively developed, and the more modern
+natural table macros are the unofficially recommended choice.  However, I find
+natural tables to be a bit too verbose. The \mono{table} macros take care of
+the {\em simple} tables. If you need to typeset {\em complicated} tables, you
+need to look into all the mechanisms and decide which one suits your needs
+best.
+
+% First lets look
+% at some of the limitations of \mono{table} macros:
+% \startitemize[n]
+%   \item No automatic calculation of the width of paragraph columns.
+%   \item It is not easy to separate out content from formatting information.
+%   \item No real support for cells spanning multiple rows. 
+%   \item Table cannot split horizontally across pages (it can split vertically
+%     across pages).
+% \stopitemize
+% 
+% Note that these are the limitations of the \mono{table} macros, and not of
+% \CONTEXT\ table mechanisms. The other mechanisms can be used to get these
+% features.
+
+This article explains the basics of the \mono{table} macros. It is cumbersome
+to separate out the features of Michael Wichura's \TABLE\ package, and those
+added or adapted by Hans Hagen in the course of integrating with
+\CONTEXT. For simplicity of exposition and with sincere
+apologies to Michael, I am going to refer to all these features as features of
+\CONTEXT's \mono{table} macros. 
+
+\section How to build tables %{{{1
+
+The basic structure of a table built with the \mono{table} macros looks
+like this:
+
+\startlines
+\tex{starttable}[\slanted{preamble}]
+ \tex{NC} \dots \tex{NC} \tex{AR} \% first row
+     \dots         \% middle rows
+ \tex{NC} \dots \tex{NC} \tex{AR} \% last row
+\tex{stoptable}
+\stoplines
+
+The \slanted{preamble} indicates the number and formatting of the
+columns. The column formatting is defined by ``column specifiers'',
+separated by vertical bars~\type{|}; we also put bars at the beginning
+and end of the preamble.  These \type{|} characters do {\em not} indicate
+vertical lines, as they do in \LATEX; they simply separate columns.
+
+Each column specifier consists of keys,
+which are single characters, % xx true? yes. Although keys can take parameters
+and the key combination indicates the formatting for that column.  
+The number of columns is simply the number of
+column specifiers (that is, the number of \type{|}'s minus one).
+
+The body of the table can contain an arbitrary number of rows. Each row has
+the form
+
+\startlines\sl
+  \tex{NC} cell 1 \tex{NC} \dots \tex{NC} cell $n$ \tex{NC} \tex{AR}
+\stoplines
+
+The \tex{NC} (mnemonic: new column) control sequence is the usual column
+separator, and \tex{AR} (mnemonic: automatic row) is the usual row
+separator. Each column separator corresponds to one~\type{|} in the
+preamble.
+
+% It is also possible to use the place the preamble in square brackets instead
+% of curly brackets, but that makes it cumbersome to get the numeric columns
+% which use square brackets as part of their specification. So in this article,
+% I will only use a preamble with curly brackets.
+
+\startbuffer[pre-1]
+\starttable[|l|c|r|]
+\stopbuffer
+
+\startbuffer[body]
+  \NC left \NC center \NC right \NC \AR
+  \NC 23   \NC 45     \NC 67    \NC \AR
+\stoptable
+\stopbuffer
+
+%  \NC 9    \NC 9      \NC 9     \NC \AR
+
+Let's consider an example. Suppose we want to produce the following table:
+\gettablebuffer[pre-1,body]
+
+Each row consists of three columns, with the first one left aligned, the second
+center aligned, and the last right aligned. The preamble for this table is
+\type{[|l|c|r|]}. Here \type{l} is an abbreviation for
+left,\footnote{\mystrut \type{l} is
+actually {\em ell}.  In the fonts used for this article, it is difficult to
+distinguish \type{l} (ell) from \type{1} (one). To make things easier for the
+reader, I will not use the digit \type{1} (one) in any example.} \type{c} for
+center, and \type{r} for right. Each column is as wide as necessary to
+accommodate the width of its contents.
+
+\myparindent The input for the above table is:
+
+\typetablebuffer[pre-1,body]
+
+The ``extra'' \tex{NC}'s at the end of each row are required. Omitting
+them can lead to hard-to-detect problems.
+
+%Notice that the preamble contains the
+%vertical bar~\type{|} even though the table does not have vertical lines. This
+%is different from \LATEX\ where~\type{|} in the preamble of \mono{tabular}
+%environment means vertical lines. If you want vertical lines you need to use
+%\tex{VL} instead of \tex{NC} as the column separator. 
+
+\section Specifying column widths %{{{1
+
+By default, each column is wide enough to accommodate the largest entry in that
+column. This may not always be desired. If you want to ensure that each column
+has a certain {\em minimum} width, use \type{w(width)} in the column
+specifier.  For example, if we want the middle column in the above table to be
+at least 4\,cm wide, we can specify the preamble as
+\startbuffer[pre-2]
+  \starttable[|l|cw(4cm)|r|]
+\stopbuffer
+
+\typetablebuffer[pre-2]
+
+\noindent which gives
+
+\gettablebuffer[pre-2,body]
+
+On the other hand, if you want to specify a certain {\em maximum} width of a
+column, use the \type{p(width)} in the column specifier. Such columns are
+called paragraph columns. For example, suppose we want a column to be
+5\,cm wide:
+
+\startbuffer[pre-1]
+\starttable[|l|lp(5cm)|]
+\stopbuffer
+
+\startbuffer[body]
+  \NC TUGboat
+  \NC The TUGboat journal is a unique benefit of joining TUG. It is
+  currently published three times a year \dots
+  \NC \AR
+\stoptable
+\stopbuffer
+
+\startbuffer[body-condensed]
+  \NC TUGboat
+  \NC The TUGboat journal ...
+  \NC \AR
+\stoptable
+\stopbuffer
+
+\gettablebuffer[pre-1,body]
+
+\noindent We can use the following:
+
+\typetablebuffer[pre-1,body-condensed]
+
+This \type{lp(5cm)} key combination gives us left-justified text,
+i.e., ragged right.  You can also use \type{rp(5cm)} to get
+right-justified (ragged left) text, and \type{cp(5cm)} to get centered
+text.
+
+However, in most cases we want such paragraph columns to be
+justified. To achieve this we can use \type{xp(5cm)}, which gives:
+
+% cheat to avoid overfull hbox
+\startbuffer[pre-2]
+\starttable[|l|xp(5.1cm)|]
+\stopbuffer
+
+\gettablebuffer[pre-2,body]
+
+\blank
+\section Horizontal and vertical lines %{{{1
+
+To get horizontal lines that span the width of the entire table, you can use
+\tex{HL} between the rows where a line is desired.
+
+By default, the width of the line (a.k.a.\ ``rule'') is 0.4\,pt\Dash \TEX's
+default for lines.
+The linewidth can be controlled by the \mono{rulethickness} option of
+\tex{setuptables}. For example, if you want 2\,pt thick lines, use
+\type{\setuptables[rulethickness=2pt]}. 
+
+The width of a specific line can be increased using an optional argument to
+\tex{HL}. This argument must be an integer, and it increases the width of the
+current line by that factor. For example:
+
+\startbuffer
+\setuptables[rulethickness=0.03em]
+\starttable[|l|l|r|]
+  \HL[3]
+  \NC Animal \NC Desc \NC Cost (\$) \NC \AR
+  \HL
+  \NC Gnat \NC per gram \NC 13.65 \NC \AR
+  \NC Emu  \NC stuffed  \NC 33.33 \NC \AR
+  \NC Gnu  \NC stuffed  \NC 92.50 \NC \AR
+  \HL[3]
+\stoptable
+\stopbuffer
+
+\typetablebuffer
+
+% not needed? Needed for tracing example.
+%   \NC Emu  \NC stuffed  \NC 33.33 \NC \AR
+
+
+\noindent gives
+
+{\gettablebuffer}
+
+Here the first and last lines are $3*0.03\,{\rm em} = 0.09\,{\rm em}$
+thick, while the middle line is the default 0.03\,em.  Notice that the
+height of the rows around the horizontal lines is automatically
+adjusted\Dash that's the \type{A} in \tex{AR}.
+
+Other row specifiers allow manual adjustment of space: \tex{NR} (new
+row), \tex{SR} (single row), \tex{FR} (first row), \tex{MR} (middle
+row), and \tex{LR} (last row). Depending on the surrounding rows, \type{\AR}
+is converted into one of these row specifiers.
+
+One can use \type{\tracetablestrue} to see what \CONTEXT\ is doing behind
+the scenes. If we add \type{\tracetablestrue} before calling the above table,
+we get:
+
+{\tracetablestrue\gettablebuffer}
+
+The first row was surrounded by two horizontal lines, so the \type{\AR} in
+the first row was changed into \type{\SR} (single row). This introduces some
+space above and below the row, so that the row is not too close to the
+horizontal lines.
+
+The second row has a horizontal line above it, so the \type{\AR} 
+was changed into \type{\FR} (first row). This adjusts the space above
+the row to provide some distance from the horizontal line.
+
+The third row does not have a horizontal line above or below it, so the
+\type{\AR} is changed into \type{\MR} (middle row). This adds normal
+inter|-|row space above and below the row.
+
+The last row had a horizontal line below it, so the \type{\AR} was changed
+into \type{\LR} (last row). This adjusts the space below the row to provide
+some distance from the horizontal line.
+
+The \type{\NR} command sequence does not adjust space at all. It should be
+used only when such tight spacing is required.
+
+If you feel that \CONTEXT\ has made a wrong choice, you can use the desired
+row separator instead of \type{\AR} to end that particular row in the table.
+
+% Division lines. Talk about them in the next issue.
+
+Vertical lines are rarely considered good typography. However, if you insist,
+use \tex{VL} as the column separator instead of
+\tex{NC}. For example, this input:
+
+\startbuffer
+\starttable[|l|cw(4cm)|r|]
+  \HL
+  \VL left \VL center \VL right \VL \AR
+  \HL
+  \VL 23   \VL 45     \VL 67    \VL \AR
+  \HL
+\stoptable
+\stopbuffer
+
+\typetablebuffer
+
+%  \HL
+%  \VL 9    \VL 9      \VL 9     \VL \AR
+
+\noindent gives
+
+\gettablebuffer
+
+This also shows that with the \type{w} key, the width of the middle column was
+increased, in this case with centered text.
+
+\section Documentation %{{{1
+
+So far I have shown some very basic features of the \mono{table} macros. A few
+more details of these macros are documented in the beginner's
+manual~\cite[beginnersmanual].  However, the manual does not list all features
+of these macros. Documentation of the features inherited from the
+\TABLE\ package is available in its own manual, which is sold by
+PC\TEX~\cite[tabledocumentation].
+
+\myparindent
+Unfortunately, there is no real documentation of the enhancements,
+especially with regards to
+color, done by \CONTEXT. There are a few examples in the source file
+\filename{core-tab.tex}~\cite[core-tab], and a few more on the \CONTEXT\
+wiki~\cite[wiki-tables].
+
+\myparindent
+So, in the next issue of this series, I will explain some additional features of
+\mono{table} macros, such as specifying the font style and color of each column,
+spanning multiple rows and columns, controlling the space between the columns,
+and splitting tables across pages.
+
+\section Other mechanisms %{{{1
+
+To conclude this installment, here is a brief overview of the other
+table-building mechanisms mentioned earlier.
+
+The tabulate macros were added for building running text aligned blocks like
+formula legends and facts. They are capable of automatic width calculation of
+paragraph columns (similar to the \filename{tabularx} package in \LATEX) and
+splitting across pages. They are built on the same underlying principle as the
+\mono{table} macros, and in due time will be backward compatible with them.
+However, at present they do not support vertical rules and colors.
+Documentation and examples of tabulations are given in a
+{\acro{\sl MAPS}} article~\cite[HansMaps] by Hans Hagen.
+
+\myparindent
+Line tables are experimental macros for building large tables that can be
+split horizontally and vertically. It is possible to repeat table header lines
+and entry columns. Unfortunately, these macros are largely undocumented.
+
+Natural tables are the most configurable table macros. Their syntax is
+inspired from \HTML\ tables. It is possible to change the color, background,
+and style of a single cell, row, or column, and of odd or even rows and
+columns. It is also easy to use \METAPOST\ backgrounds. Again, there is no detailed
+documentation, but many examples are present in Hans's
+example document~\cite[NaturalTables]; another
+interesting example is Willi Egger's MyWay~\cite[Willi].
+
+\myparindent
+Finally, the pros and cons of each of these mechanisms is summarized in
+an article in the \CONTEXT\ Garden wiki~\cite[wiki-comparison].
+
+\subject Bibliography
+
+% Quick and dirty.
+
+\startitemize[n][left={[},right={]}, width=1.5em, stopper=]
+  \item[tablemacros] Michael Wichura: The \TABLE\ Macro Package.
+    {\tt\from[tablemacros]}.
+  \item[beginnersmanual] Hans Hagen: \CONTEXT\ an excursion.
+    {\tt\from[beginnersmanual]}.
+  \item[tabledocumentation] Michael Wichura: \PICTEX\ and \TABLE\ manual.
+    {\tt\from[tabledocumentation]}.
+  \item[core-tab] Hans Hagen: \CONTEXT\ core macros\Dash \TABLE\ embedding.
+    \hyphenpenalty=10000 {\tt\from[core-tab]}.
+  \item[wiki-tables] \CONTEXT\ garden\Dash Table. \crlf {\tt\from[wiki-tables]}.
+  \item[HansMaps] Hans Hagen: Tabulating in \CONTEXT\Dash text flow tables.
+    {\it NTG MAPS}, Spring 1999. {\tt\from[HansMaps]}.
+  \item[NaturalTables] Hans Hagen: Natural tables in \CONTEXT. 
+    {\tt\from[NaturalTables]}.
+  \item[Willi] Willi Egger: My Way\Dash Use of natural table environment. 
+    {\tt\from[Willi]}.
+  \item[wiki-comparison] \CONTEXT\ garden\Dash Tables Overview. \crlf
+    {\tt\from[wiki-comparison]}.
+\stopitemize
+
+
+% }}}
+
+%\setlastpage{1}
+
+\StopArticle
+\stoptext

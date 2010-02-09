@@ -1,0 +1,507 @@
+% engine=luatex
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+\input tugboat.dates
+\edef\tubpage{\the\count0}
+
+\setupcolors[state=start]
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+ \setvariables
+    [tugboat]
+    [year=\tubyear,
+     volume=\tubvol,
+     number=\tubnum,
+     page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={Integrating Unicode and OpenType math\\in~\CONTEXT},
+     author={Aditya Mahajan},
+    address={},
+      email={adityam (at) umich dot edu},
+  ]
+
+% I need a monospaced font that includes greek letters. The only font that I
+% know that does this is dejavu sans mono. But, it looks horrible with LM. So, I
+% am using cambria as the main font. If you know better alternatives, feel free
+% to change the fonts.
+
+%% \starttypescript [mono] [dejavu]
+%%     %\setups[font:fallback:mono]
+%%     \definefontsynonym [Mono]           [name:DejaVu Sans Mono]   
+%%                        [features=none]
+%%     \definefontsynonym [MonoItalic]     [name:DejaVu Sans Mono]    
+%%                        [features=none]
+%%     \definefontsynonym [MonoBold]       [name:DejaVu Sans Mono]      
+%%                        [features=none]
+%%     \definefontsynonym [MonoBoldItalic] [name:DejaVu Sans Mono]
+%%                        [features=none]
+%% \stoptypescript
+%% 
+%% \definetypeface [mainface] [rm] [serif] [cambria] [default]
+%% %definetypeface [mainface] [rm] [serif] [charter] [default]
+%% \definetypeface [mainface] [ss] [sans]  [cambria] [default]
+%% \definetypeface [mainface] [tt] [mono]  [dejavu]  [default] [rscale=0.85]
+%% \definetypeface [mainface] [mm] [math]  [cambria] [default, text=rm]
+%% 
+%% \setupbodyfont[mainface,10pt]
+ 
+\starttypescript [mono] [cmunicode]
+     %\setups[font:fallback:mono]
+     \definefontsynonym [Mono]           [file:cmuntt]
+                        [features=none,liga=off]
+     \definefontsynonym [MonoItalic]     [file:cmuntt]
+                        [features=none]
+     \definefontsynonym [MonoBold]       [file:cmuntt]
+                        [features=none]
+     \definefontsynonym [MonoBoldItalic] [file:cmuntt]
+                        [features=none]
+\stoptypescript
+
+\definetypeface[mainface][rm][serif][modern]   [default]
+\definetypeface[mainface][ss][sans] [modern]   [default]
+\definetypeface[mainface][tt][mono][cmunicode] [default]
+\definetypeface[mainface][mm][math][modern] [default]
+
+\setupbodyfont[mainface,10pt]
+
+\StartAbstract
+  In this article, I briefly explain the approach taken by \CONTEXT\ to
+  integrate Unicode math with OpenType fonts. 
+\StopAbstract
+
+\starttext
+\StartArticle
+
+\section{A bit of history}
+
+Since around 2000, \CONTEXT\ has supported Unicode math input. Under the
+\type{utf-8} input regime (obtained with \type{\enableregime[utf-8]}), you could
+type \type{$αβγ$} to get the Greek letters $\alpha\beta\gamma$. %$αβγ$. 
+% Unicode math does not work with xetex!! Why??
+This was achieved by lot of
+macro jugglery; similar to the kind of macro jugglery needed for accents to
+work without
+having to type in the arcane plain \TEX\ accent macros. Basically, the input
+regime ensured that inside math mode \type{α} got mapped to \type{\alpha}, and
+the rest was taken care of by the usual font mappings that mapped \type{\alpha} to
+the correct glyph in the correct font. However, these mappings were not clean. If
+you defined a macro, say \type{\MACRO}, that took one argument, then
+\type{\MACRO α} would not work; you had to type \type{\MACRO{α}}. This small detail of
+grouping \UTF-8 input was a constant reminder that things were not so clean
+underneath.
+
+\LUATEX\ was designed to handle input encoding cleanly.
+The engine only understands \UTF-8 encoding and provides enough hooks to 
+implement other encodings. \CONTEXT\ \MKIV\ assumes that the input is 
+either \UTF-8 or \UTF-16. The input can then be directly mapped to 
+the correct glyph locations in TrueType and OpenType fonts.
+However, handling of math input was much trickier, mainly because of the
+effort needed to support OpenType math. So, for some time,
+the handling of math fonts did not change: in math mode \type{α} was mapped to
+\type{\alpha} and traditional \TEX\ font mapping ensured that \type{\alpha} was
+mapped to the correct glyph in the correct font.
+
+Around the beginning of this year, \CONTEXT\ \MKIV\ completely moved to Unicode
+math. Thus, \type{0x1D6FC} (math italic small alpha) was mapped to the
+same position in an OpenType math font.  If you type this Unicode character in
+math mode, the output is $\alpha$. %With xetex, I have to cheat $𝛼$. 
+For convenience, typing \type{0x03B1} (Greek
+small letter alpha) in math mode gets mapped to \type{0x1D6FC}; as does the
+macro \type{\alpha}. All this is transparent to the user, except when he
+accidentally types \type{$\MACRO α$} and is pleasantly surprised not to get a
+nasty error message. 
+
+There are two steps involved in the integration of Unicode input with OpenType
+math fonts: (i)~map the input characters or macros to the
+correct Unicode character; (ii)~map the Unicode character to the correct
+OpenType glyph at the correct size and with the correct kerning. The bulk of these
+mappings are done by five files: \filename{char-def.lua},
+\filename{math-ini.lua}, \filename{math-map.lua}, \filename{math-noa.lua} and \filename{math-vfu.lua}.
+Below I explain briefly what these files do. Please take everything in this
+article with a pinch of salt. I do not understand how OpenType math fonts work,
+so specific details may be wrong. The main idea of this article is to convey the
+gist of how things are done in \CONTEXT, and where to search if you want to know
+specific details.
+
+
+\section{char-def.lua}
+
+Mapping \UTF-8 input characters to Unicode characters is straightforward\Dash{}the byte
+sequence of the input character is the same as the Unicode slot. Thus, input
+byte sequence \type{0x1D6FC} is the Unicode character \type{0x1D6FC}. However,
+mapping macros to Unicode byte sequences is different. We need to explicitly
+tell \CONTEXT\ that \type{\alpha} corresponds to the Unicode character
+\type{0x1D6FC}. Furthermore, just getting the correct glyph is not sufficient
+for typesetting mathematics. We also need to know the math class of the glyph,
+so that \TEX\ can correctly position the characters.
+
+All this information is stored as a
+\LUA\ table in \filename{char-def.lua}. This is a huge file, initially
+generated from Unicode tables and later updated manually from data present in
+\CONTEXT\ files and elsewhere (it is still not complete). For example,
+the entry for \type{0x1D6FC} is:
+\starttyping
+[0x1D6FC]={
+ category="ll",
+ description="MATHEMATICAL ITALIC SMALL ALPHA",
+ direction="l",
+ linebreak="al",
+ mathclass="default",
+ mathname="alpha",
+ specials={ "font", 0x03B1 },
+ unicodeslot=0x1D6FC,
+},
+\stoptyping
+Amongst other things, this tells \CONTEXT\ that the macro \type{\alpha}
+(indicated by \type{mathname="alpha"}) corresponds to this Unicode slot. It also
+tells that the math class of this character is \type{default}. Similar details
+are provided for a large fraction of the Unicode characters.
+
+Some Unicode
+characters correspond to more than one macro (with different math classes). One
+such example is \type{0x007C}, which corresponds to \type{\arrowvert},
+\type{\vert}, \type{\lvert}, \type{\rvert}, and \type{\mid}, each belonging to a
+different math class. This Unicode character is represented as:
+\starttyping
+{
+ adobename="bar",
+ category="sm",
+ cjkwd="na",
+ contextname="textbar",
+ description="VERTICAL LINE",
+ direction="on",
+ linebreak="ba",
+ mathspec={
+  { class="nothing",   name="arrowvert" },
+  { class="delimiter", name="vert"      },
+  { class="open",      name="lvert"     },
+  { class="close",     name="rvert"     },
+  { class="relation",  name="mid"       },
+ },
+ unicodeslot=0x007C,
+},
+\stoptyping
+The different macros and their corresponding math classes are encoded as part of
+a \type{mathspec} key. When the character \type{|} (\type{0x007C}) is typed
+the math class is set to the class of the first
+element of the \type{mathspec} table (\type{nothing} in this case).
+
+\section{math-ini.lua}
+
+All the information in the \LUA\ table in \filename{char-def.lua} by itself is
+useless. We need to tell \CONTEXT\ how to use it. For the math mappings, this is
+done in \filename{math-ini.lua}.
+
+This file begins by defining names for
+the different math classes:
+\starttyping
+local classes = {
+    ord       =  0,  -- mathordcomm    
+    op        =  1,  -- mathopcomm     
+    bin       =  2,  -- mathbincomm    
+    rel       =  3,  -- mathrelcomm    
+    open      =  4,  -- mathopencomm   
+    close     =  5,  -- mathclosecomm  
+    punct     =  6,  -- mathpunctcomm  
+    alpha     =  7,  -- mathalphacomm  
+    accent    =  8,  -- class 0
+    radical   =  9,
+    xaccent   = 10,  -- class 3
+    topaccent = 11,  -- class 0
+    botaccent = 12,  -- class 0
+    under     = 13,
+    over      = 14,
+    delimiter = 15,
+    inner     =  0,  -- mathinnercomm  
+    nothing   =  0,  -- mathnothingcomm
+    choice    =  0,  -- mathchoicecomm 
+    box       =  0,  -- mathboxcomm    
+    limop     =  1,  -- mathlimopcomm  
+    nolop     =  1,  -- mathnolopcomm  
+}
+\stoptyping
+
+For each math class, this file has functions to return the
+\LUATEX\ code to define the corresponding math characters. A few examples of
+such functions:
+\starttyping
+local function delcode(target,family,slot)
+    return format('\\Udelcode%s="%X "%X ',
+                  target,family,slot)
+end
+local function mathchar(class,family,slot)
+    return format('\\Umathchar "%X "%X "%X ',
+                   class,family,slot)
+end
+local function mathaccent(class,family,slot)
+    return format('\\Umathaccent "%X "%X "%X ',
+                  0,family,slot) 
+end
+\stoptyping
+
+\noindentation
+Similar functions are there for defining math symbols, for example:
+\starttyping
+function setmathsymbol(name,class,family,slot)
+  if class == classes.accent then
+    texsprint(
+        format("\\unexpanded\\xdef\\%s{%s}",
+        name, 
+        mathaccent(class,family,slot)))
+  elseif class == classes.topaccent then
+    texsprint(
+        format("\\unexpanded\\xdef\\%s{%s}",
+        name,
+        mathtopaccent(class,family,slot)))
+  elseif class == classes.botaccent then
+    texsprint(
+        format("\\unexpanded\\xdef\\%s{%s}",
+        name,
+        mathbotaccent(class,family,slot)))
+  ...
+end
+\stoptyping
+
+\type{math-ini.lua} then defines a \LUA\ function named \type{mathematics.define} that goes
+through all the elements in the table in \filename{char-def.lua} and maps them
+to the correct \LUATEX\ command.
+
+These mappings are all that is needed to work with OpenType math fonts like
+Cambria and Asana Math. \CONTEXT\ has predefined typescripts for Cambria; so, to
+use Cambria you can just type
+\starttyping
+\usetypescript[cambria]
+\setupbodyfont[cambria]
+\stoptyping
+
+There are no predefined typescripts for Asana Math, but defining one on our own
+is not too hard. First, we need to define a math typescript:
+\starttyping
+\starttypescript [math] [asana] [name]
+  \definefontsynonym
+    [MathRoman] 
+    [name:Asana-Math]
+    [features=math\mathsizesuffix]
+\stoptypescript
+\stoptyping
+
+\noindentation
+The \type{features=math\mathsizesuffix} option activates the OpenType math
+features. The rest of the typescript can be defined in the usual manner.
+
+\starttyping
+\starttypescript [asana]
+  \definetypeface [asana] [rm] [serif] 
+      [palatino] [default]
+  \definetypeface [asana] [ss] [sans]  
+      [modern]   [default] [rscale=1.075]
+  \definetypeface [asana] [tt] [mono]  
+      [modern]   [default] [rscale=1.075]
+  \definetypeface [asana] [mm] [math]  
+      [asana]    [default]
+  \quittypescriptscanning
+\stoptypescript
+\stoptyping
+
+\noindentation
+To use this typescript, we need to type
+
+\starttyping
+\usetypescript[asana]
+\setupbodyfont[asana]
+\stoptyping
+
+\section{math-map.lua and math-noa.lua}
+
+So far, we have mapped Unicode input and macros to OpenType math fonts. However,
+when using \TEX\ one expects traditional \TEX\ input to work. Thus, \type{$a$}
+should typeset math italic $a$. No one is likely to type \type{0x1D44E}, even if
+Unicode suggests that. The same is true for bold fonts. One expects \type{${\bf
+a}$} to give bold ${\bf a}$, even if Unicode suggests that we should have typed
+\type{0x1D41A}. 
+
+To accommodate this, in math mode \CONTEXT\ maps upper and lower
+case letters \type{A-Z}, \type{a-z},  digits \type{0-9}, and upper and lower
+case Greek letters \type{α-ω}, \type{A-Ω} to the corresponding ranges in Unicode
+math, depending on the current font style. These mappings are defined in
+\filename{math-map.lua} file.
+
+The mappings are defined using a \LUA\ table, which looks like this.
+\starttyping
+mathematics.alphabets = {
+    regular = {
+              tf = { ... },
+              it = { ... },
+              bi = { ... },
+              bf = { ... },
+    },
+    sansserif = {
+              tf = { ... },
+              it = { ... },
+              bi = { ... },
+              bf = { ... },
+    },
+    monospaced = {
+              tf = { ... },
+    },
+    blackboard = {
+              tf = { ... },
+    },
+    fraktur = {
+              tf = { ... },
+              bf = { ... },
+    },
+    script  = {
+              tf = { ... },
+              bf = { ... },
+    }
+}
+\stoptyping
+
+Each of these subtables maps input letters to their corresponding Unicode
+characters. These subtables look as follows.
+\starttyping
+regular = {
+    ...
+    it = {
+      ucletters = 0x1D434,
+      lcletters = { -- H
+        [0x00061]=0x1D44E, [0x00062]=0x1D44F, 
+        [0x00063]=0x1D450, [0x00064]=0x1D451, 
+        [0x00065]=0x1D452, [0x00066]=0x1D453,
+        [0x00067]=0x1D454, [0x00068]=0x0210E, 
+        ... },
+     symbols = {
+        [0x0391]=0x1D6E2, [0x0392]=0x1D6E3, 
+        [0x0393]=0x1D6E4, [0x0394]=0x1D6E5, 
+        [0x0395]=0x1D6E6, [0x0396]=0x1D6E7,
+        ... },
+    },
+},
+\stoptyping
+
+The line \type{ucletters = 0x1D434} tells \CONTEXT\ to map upper case letters to
+Unicode characters starting from \type{0x1D434}. The line
+\type{lcletters = {...}} tells \CONTEXT\ to map  \type{0x00061} to
+\type{0x1D44E}, \type{0x00062}
+to \type{0x1D44F}, as so on. For lower case letters, simply specifying
+\type{lcletters = 0x1D44E} would not work because Unicode mathematical
+italic small letters are not in contiguous slots. For example, the slot
+\type{0x1D455} (which corresponds to lower case h) is empty; lower
+case h should map to slot \type{0x0210E}.
+
+Other subtables are filled in a
+similar manner.
+
+\filename{math-map.lua} also defines \LUA\ functions that use these tables to
+remap characters on the fly. The actual transformation takes place in
+\filename{math-noa.lua} which goes through the math noad list and carries out
+the actual transformations according to the mappings in \filename{math-map.lua}.
+
+\section{math-vfu.lua}
+
+Using the above infrastructure, it is easy to use OpenType math fonts in
+\CONTEXT. Unfortunately, at present there are only two Unicode math
+fonts\Dash{}Cambria and Asana Math. OpenType math version of \TEX\ Gyre math fonts are
+planned, but until they are developed, we need a way to use traditional \TEX\
+fonts in \CONTEXT\ \MKIV. \CONTEXT\ creates virtual OpenType math fonts to use
+traditional \TEX\ fonts. The mappings for creating the virtual font are in
+\filename{math-vfu.lua}. Once a virtual OpenType math font is created, the above
+infrastructure can be used to access the font.
+
+First, \filename{math-vfu.lua} defines many encoding vectors that map Unicode
+characters to glyph locations of the font. One such encoding vector is
+\starttyping
+fonts.enc.math["tex-mi"] = {
+    [0x1D6E4] = 0x00, -- Gamma
+    [0x1D6E5] = 0x01, -- Delta
+    [0x1D6E9] = 0x02, -- Theta
+    [0x1D6F3] = 0x02, -- varTheta (not in TeX)
+    [0x1D6EC] = 0x03, -- Lambda
+    [0x1D6EF] = 0x04, -- Xi
+    [0x1D6F1] = 0x05, -- Pi
+    [0x1D6F4] = 0x06, -- Sigma
+    ...
+}
+\stoptyping
+
+\noindentation
+This tells that Unicode character \type{0x1D6E4} should be mapped to the font
+glyph \type{0x00} and so on. A 
+virtual font that associates such encoding vectors with
+traditional \TEX\ fonts is created using
+\starttyping
+mathematics.make_font ( "lmroman10-math", {
+  { name="lmroman10-regular.otf", 
+    features="virtualmath", main=true },
+  { name="lmmi10.tfm", vector="tex-mi", 
+    skewchar=0x7F },
+  { name="lmsy10.tfm", vector="tex-sy", 
+    skewchar=0x30, parameters=true },
+  { name="lmex10.tfm", vector="tex-ex", 
+    extension=true },
+  { name="msam10.tfm", vector="tex-ma" },
+  { name="msbm10.tfm", vector="tex-mb" },
+  { name="lmroman10-bold.otf", "tex-bf" } ,
+  { name="lmmib10.tfm", vector="tex-bi", 
+    skewchar=0x7F },
+  { name="lmsans10-regular.otf", 
+    vector="tex-ss", optional=true },
+  { name="lmmono10-regular.otf", 
+    vector="tex-tt", optional=true },
+  { name="eufm10.tfm", vector="tex-fraktur", 
+    optional=true },
+  { name="eufb10.tfm", 
+    vector="tex-fraktur-bold", optional=true },
+} )
+\stoptyping
+
+\noindentation
+This creates a virtual font \type{lmroman10-math} which takes bits and pieces
+from various fonts. This virtual font can be used as follows.
+\starttyping
+\starttypescript [math] [modern]
+  ...
+  \definefontsynonym
+    [LMMathRoman10-Regular]
+    [LMMath10-Regular@lmroman10-math]
+  ...
+\stoptypescript
+\stoptyping
+
+\noindentation
+The \type{@lmroman-math} in the name uses the above virtual
+font. The \type{LMMathRoman10-Regular} font can be used to complete the
+math typescript in the usual manner. 
+
+\CONTEXT\ provides virtual OpenType math fonts for Latin Modern, Times
+(\type{txfonts} and MathTime), Palatino (\type{pxfonts}), Iwona,
+Lucida, and MathDesign (Charter, Garamond, and Utopia) fonts.
+
+\section{Conclusion}
+
+\CONTEXT\ now supports OpenType math fonts. In fact, even support for
+traditional \TEX\ fonts now involves creating a virtual OpenType math font. Thus,
+as far as \CONTEXT\ \MKIV\ is concerned, OpenType math fonts are the future.
+However, the current implementation is still evolving, so some of the
+implementation details described in this paper will likely change with time.
+
+% context uses count1 instead of count0 for the page number
+{\count0=\count1 \writelastpage{+1}}
+
+\StopArticle
+\stoptext
+
+\startbibliography
+\item[vieth] Ulrik Vieth, \quotation{\em OpenType Math Illuminated}, TUGboat
+  30:1, 2009
+\stopbibliography
+

@@ -1,0 +1,552 @@
+\usemodule[tugboat]
+
+\input tugboat.dates
+
+% From Karl's email
+% This issue is not being produced
+% on letter paper, but in the "jacow" size that Volker Schaa has used.
+% That is:
+%   \pdfpagewidth=210 true mm
+%   \pdfpageheight=11 true in
+%   \hoffset = -2.95mm
+
+
+\definepapersize[jacow][width=210mm, height=11in]
+\setuppapersize[jacow][jacow]
+\setuplayout[backspace=\dimexpr 6pc-2.95mm \relax,
+             cutspace=\dimexpr 6pc-2.95mm \relax]
+
+% \showlayout
+
+\def\tinyskip{\vskip 2pt plus2pt}
+\edef\tubpage{\the\count0 }
+\hfuzz=.7pt
+
+\doifmodeelse{aditya}
+ {\let\myparindent\relax % This interferes on my machine
+  \let\mystrut\relax}%This is for testing
+ {\def\myparindent{\leavevmode\kern20pt }
+  \def\mystrut{\vrule width0pt height2.6ex depth0pt }}
+
+\setvariables
+  [tugboat]
+  [type=proceedings,
+   columns=yes,
+   grid=no]
+
+\setupcolumns[balance=no]
+
+\setvariables
+   [tugboat]
+   [year=\tubyear,
+    volume=\tubvol,
+    number=\tubnum,
+    page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Table macros II},
+   subtitle={Table macros continued}, % Subtitle does not work :-(
+     author={Aditya Mahajan},
+    address={University of Michigan},
+      email={adityam (at) umich dot edu},
+  ]
+
+% Macros {{{
+
+\def\gettablebuffer
+  {\dosingleargument\dogettablebuffer}
+
+\def\dogettablebuffer[#1]%
+  {\startlinecorrection
+    \midaligned
+      \bgroup
+      \doifelsenothing{#1}
+        {\getbuffer}%
+        {\getbuffer[#1]}%
+      \egroup
+    \stoplinecorrection}
+
+\def\typetablebuffer
+  {\dosingleargument\dotypetablebuffer}
+
+\def\dotypetablebuffer[#1]%
+  {\blank[small]%
+   \startpacked
+    \typebuffer[#1]%
+    \stoppacked
+   \blank[small]}
+    
+\hyphenation
+ {start-table
+  start-tables
+  start-tabulate
+  start-line-table
+  stop-table
+  stop-tables
+  stop-tabulate
+  stop-line-table
+  Wich-ura
+  mne-mon-ic}
+
+% }}}
+
+\starttext
+\StartArticle
+
+\StartAbstract
+  \hbox to \hsize{\hfil This article explains some of the basic features of \mono{table} macros in
+  \CONTEXT.\hfil}
+\StopAbstract
+
+\section Introduction %{{{1
+
+In the last article, I presented some basic features of the \mono{table}
+macros in \CONTEXT. In this article I will present additional features of
+these macros. These two articles cover the most frequently used features.
+There are other hooks for more advanced tweaking; some are covered in the
+\CONTEXT\ beginner's manual~\cite[beginnersmanual]; others require reading
+\filename{core-tab.tex}~\cite[core-tab].  A future article in this series may
+touch upon those features.
+
+
+\section Specifying font style and color of columns %{{{1
+
+\startbuffer[pre-1]
+\starttable[|lf{\bf}|c|]
+\stopbuffer
+
+\startbuffer[body]
+  \NC Year \NC Production (in 1,000 units) \NC \AR
+  \HL
+  \NC 1990 \NC 20 \NC \AR
+  \NC 1991 \NC 50 \NC \AR
+\stoptable
+\stopbuffer
+
+Sometimes you want the entire column to be set in a particular font. For
+example, suppose we want to produce the following table:
+\gettablebuffer[pre-1,body]
+
+One way to do this is to mark the first column in each row by \type{\bf}. This
+is time consuming and difficult to change. \CONTEXT\ tables support an \mono{f}
+key that can be used in the table preamble to set the font for the entire
+column.  The preamble of the previous example was 
+\typetablebuffer[pre-1]
+
+\noindent 
+Here \type{f{\bf}} tells \CONTEXT\ to typeset the first column of the table
+with font style \type{\bf}. You can use any font style command with the
+\mono{f} key. Some of the more frequently used font commands have been given a
+key of their own. These are:
+
+\midaligned{
+\starttable[|lT|l|l|] 
+  \NC B \NC Bold    \NC equivalent to \mono{f\char`{\letterbackslash bf\char`}} \NC \AR
+  \NC I \NC Italic  \NC equivalent to \mono{f\char`{\letterbackslash it\char`}} \NC \AR
+  \NC S \NC Slanted \NC equivalent to \mono{f\char`{\letterbackslash sl\char`}} \NC \AR
+  \NC R \NC Roman   \NC equivalent to \mono{f\char`{\letterbackslash rm\char`}} \NC \AR
+  \NC T \NC Teletype\NC equivalent to \mono{f\char`{\letterbackslash tt\char`}} \NC \AR
+\stoptable
+}
+
+So, we could also have written the preamble of the previous example as
+\type{\starttable[|lB|c|]}.
+
+\section Changing the formatting of a cell %{{{1
+
+In some tables, the header (first row of the table) needs to be bold and
+center aligned, while the rest of the rows are left aligned. For example
+\startbuffer
+\starttable[|l|l|]
+  \NC \REF[cB]{Name} \NC \REF[cB]{Position} \NC \AR
+  \HL
+  \NC Someone        \NC An important person \NC \AR
+  \NC Someone else   \NC A really important person \NC \AR
+\stoptable
+\stopbuffer
+\gettablebuffer
+
+\startbuffer
+\starttable[|l|l|]
+  \NC \REF[cB]{...} \NC \REF[cB]{...} \NC \AR
+  \HL
+  \NC ...  \NC ... \NC \AR
+  \NC ...  \NC ... \NC \AR
+\stoptable
+\stopbuffer
+
+\noindent
+The input for this table is:
+\typetablebuffer
+
+\noindent
+Notice that the table preamble says \type{|l|l|}, that is, both columns should
+be left aligned. In the first row we say \type{\REF[cB]{...}}, which changes
+the formatting of that cell to \mono{cB}, that is, center aligned and bold.
+\type{\REF} is a short form of \type{\ReFormat}; both macros
+can be used for changing the format of the current cell. The general syntax of
+the command is \type{\REF[keys]{column content}} where \type{keys} can
+be any of the valid formatting keys accepted in the table preamble.
+
+To change only the alignment of the current cell, you can use
+\type{\JustCenter}, \type{\JustLeft}, and \type{\JustRight}, which stand for
+\quote{justify center}, \quote{justify left}, and \quote{justify right},
+respectively.\footnote{Most macros in \CONTEXT\ use the word \quote{align}.
+These macros come from the \TABLE\ package, which uses the word
+\quote{justify}.} 
+
+
+\section Columns containing math %{{{1
+
+Suppose we want an entire column to to be in math mode. For example,
+\startbuffer
+\starttable[|cm|cM|l|]
+  \NC \REF[c]{Constant} \NC \REF[c]{Series}
+  \NC \REF[c]{Value} \NC \AR
+  \HL
+  \NC \pi \NC 3 \sum_{n=0}^{\infty} 
+      \frac {(2n)!} {n!^2 (2n+1) 16^n}
+  \NC 3.1415926\dots \NC \AR
+  %
+  \NC e   \NC \sum_{n=0}^{\infty} 
+      \frac 1{n!}
+  \NC 2.7182818\dots \NC \AR
+\stoptable
+\stopbuffer
+\gettablebuffer
+
+\noindent In this case, the first two columns are in math mode (The second is
+actually in display math mode).  We can manually surround each entry by
+\type{$}; however, \CONTEXT\ provides two \quote{math column} keys: \mono{m}
+sets the column in inline math mode, and \mono{M} sets the column
+in display math mode. The above example was thus keyed in as
+\typetablebuffer
+
+\noindent The first column is in inline math mode (\mono{m} key), and the
+second column is in display math mode (\mono{M} key).  Notice that I have used
+\type{\REF[c]{...}} in the first row, so the
+headings are not in math mode. 
+
+\section Numeric columns %{{{1
+
+Tables containing statistical data need the data to be aligned at the decimal
+place. \CONTEXT\ provides two keys for this: 
+\mono{n} displays the column in text mode, while \mono{N} displays it in
+math mode. Both keys take a space-delimited argument of the form \type{x.y}
+where \type{x} is the number of digits before the decimal and \type{y} is the
+number of digits after the decimal. For example, to get the following table
+(adapted from Tobias Oetiker's ``The not so short introduction to \LATEX''):
+
+\startbuffer
+\starttable[|cm|n5.4 |]
+  \NC \REF[c]{Pi expression} 
+  \NC \REF[c]{Value} \NC \AR
+  \HL
+  \NC \pi               \NC 3.1416   \NC \AR
+  \NC \pi^{\pi}         \NC 36.46    \NC \AR
+  \NC (\pi^{\pi})^{\pi} \NC 80,662.7 \NC \AR
+  \HL
+\stoptable
+\stopbuffer
+
+\gettablebuffer
+
+\noindent I keyed in
+
+\typebuffer
+
+\noindent The key \type{|n5.4 |} (notice the space at the end) means that we
+want five digits before the decimal and four digits after the decimal.
+
+Some European countries use a comma as a decimal separator. This can be done
+using the \mono{q} and \mono{Q} keys. They take a space-delimited argument
+of the form \type{x,y} which has the same meaning as the argument of \mono{n}
+and \mono{N} keys. So, to get this table
+
+\startbuffer
+\starttable[|cm|q5,4 |]
+  \NC \REF[c]{Pi expression} 
+  \NC \REF[c]{Value} \NC \AR
+  \HL
+  \NC \pi               \NC 3,1416   \NC \AR
+  \NC \pi^{\pi}         \NC 36,46    \NC \AR
+  \NC (\pi^{\pi})^{\pi} \NC 80.662,7 \NC \AR
+  \HL
+\stoptable
+\stopbuffer
+
+\gettablebuffer
+
+\noindent I keyed in
+
+\typebuffer
+
+An \mono{n} or \mono{N} column must contain a dot; a \mono{q} or \mono{Q}
+column must contain a comma. For cells that do not contain a dot or comma
+(for example, the headings of the table) we can use \type{\REF} to change the
+formatting. The \TEX\ primitive \type{\omit} can be used to leave the cell
+empty.
+
+\section[sec:spanning] Spanning multiple columns and rows %{{{1
+
+In table heads, one often needs a cell spanning multiple columns. \CONTEXT\
+provides the \type{\use} macro to do this. This macro takes an
+argument specifying the number of columns to span.  For example, to use five
+columns, we can use \type{\use{5}}. The macros \type{\TWO}, \type{\THREE},
+\type{\FOUR}, \type{\FIVE}, \type{\SIX} are shortcuts to span the corresponding
+number of columns. 
+
+By default, when spanning multiple columns, the formatting keys of the last
+spanned column are in effect. We can use \type{\REF} to change the formatting.
+\CONTEXT\ also provides \type{\Use} (note the uppercase \mono{U}) to span
+multiple columns and also set the formatting: to span three columns and
+make the content center aligned  we can use \type{\Use{3}[c]{content}}. 
+
+The support for spanning multiple rows is more limited. There are two commands
+\type{\Lower} and \type{\Raise} that can lower or raise the contents of the
+cell. There are two forms of these commands: \type{\Raise{5}{content}} which
+raises the content by 5 times 1/12th of the line height; and
+\type{\Raise(dimen){content}} which raises the content by \type{dimen} (which
+can be any valid \TEX\ dimension). 
+
+The most common usage of spanning multiple rows is spanning two rows in table
+heads. For that, we can use \type{\LOW}, which lowers the current cell by
+half of the line height, making it visually centered between the two rows.
+
+Here is a table showing both column and row spanning
+(example adapted from Andy Roberts' \LATEX\ tutorial~\cite[roberts]):
+\tinyskip
+
+\startbuffer[teams]
+\starttable[|l|l|l|]
+  \HL
+  \VL \Use{3}[c]{Team Sheet}      \VL \AR
+  \HL
+  \VL Goal Keeper  \VL GK 
+              \VL Paul Robinson   \VL \AR
+  \HL
+  \VL \Lower(1.5\lineheight){Defenders} \VL 
+     LB \VL Lucus Radebe    \VL \AR \VL \VL
+     DC \VL Michael Duberry \VL \AR \VL \VL
+     DC \VL Dominic Matteo  \VL \AR \VL \VL
+     RB \VL Didier Domi     \VL \AR
+  \HL
+\stoptable
+\stopbuffer
+\gettablebuffer[teams]
+
+\noindent This was typed as
+
+\typetablebuffer[teams]
+
+\noindent In the first row we use \type{\Use{3}[c]{...}} to span three columns and
+make the cell center aligned. In the first column of the third row, we use
+\type{\Lower(1.5\lineheight){...}} to lower the cell so
+that it appears to be visually centered in the last four rows.
+
+\section Controlling space between columns %{{{1
+
+By default, there is a 0.5\,em (usually about half
+the current font size) space between the columns.
+We can change this using the \mono{o} and the \mono{s} keys. The \mono{o} key
+changes the space on the right of the current column; the \mono{s} key changes
+the space of all the following columns until the next \mono{o} or \mono{s} key.
+
+There are two ways of specifying the parameters of the \mono{o} and \mono{s} keys.
+The first is in integer multiples of 0.5\,em: \type{s{n}} makes the space equal
+to \mono{n} times 0.5\,em. So, to get a space of 1.5\,em between columns we can
+use \type{\starttable[s{3}|l|l|]}. The second way is to specify the distance as
+an arbitrary \TEX\ dimension. So, we could also have used
+\type{\starttable[s(1.5em)|l|l|]}. Notice that in the first case, the argument
+is given in curly brackets;\footnote{Actually, this is one argument according to
+\TEX's parsing rule. So, for single digit arguments, we can omit the curly
+brackets.} in the second, the argument is given in parentheses.
+
+\myparindent
+It is also possible to add padding (kerning) to the left and/or right of each column.
+The key \mono{i} adds padding to the left, \mono{j} adds padding to the right,
+and \mono{k} adds padding to both the right and the left.\footnote{We are
+really running out of letters of the alphabet!} The amount of padding is
+specified in the same way as in the \mono{o} and the \mono{s} keys: either in
+multiples of 0.5\,em, or as arbitrary dimensions.
+
+\myparindent
+A combination of these keys can be used to force the \mono{table} macros to
+produce tables as recommended by the \filename{booktabs} package~\cite[booktabs]. For
+example
+
+\startbuffer
+\setuptables[rulethickness=0.03em]
+\starttable[s0|l|i2l|i2r|]
+\HL[3]
+\NC \Use2[c]{Item}         \NC           \NC \AR
+\DL[2]                     \DC               \DR
+\NC Animal \NC Description \NC Price (\$)\NC \AR
+\HL[2]
+\NC Gnat   \NC per gram    \NC 13.65     \NC \AR
+\NC        \NC each        \NC  0.01     \NC \AR
+\NC Gnu    \NC stuffed     \NC 92.50     \NC \AR
+\NC Emu    \NC stuffed     \NC 33.33     \NC \AR
+\HL[3]
+\stoptable
+\stopbuffer
+
+\typetablebuffer
+
+\noindent gives
+
+{\gettablebuffer}
+
+Notice that in this case, the horizontal lines do not extend beyond the table.
+The half line\footnote{In these articles, I have only talked about \type{\HL}
+and not explained how to get {\em division lines} between rows. This is
+explained in the \CONTEXT\ manual~\cite[beginnersmanual].} after the first row
+extends only until the end of the second column. Compare this with the table that we
+get from \type{\starttable[|l|l|r|]}:
+
+\startbuffer
+\setuptables[rulethickness=0.03em]
+
+\starttable[|l|l|r|]
+\HL[3]
+\NC \Use2[c]{Item}         \NC           \NC \AR
+\DL[2]                     \DC               \DR
+\NC Animal \NC Description \NC Price (\$)\NC \AR
+\HL[2]
+\NC Gnat   \NC per gram    \NC 13.65     \NC \AR
+\NC        \NC each        \NC  0.01     \NC \AR
+\NC Gnu    \NC stuffed     \NC 92.50     \NC \AR
+\NC Emu    \NC stuffed     \NC 33.33     \NC \AR
+\HL[3]
+\stoptable
+\stopbuffer
+
+{\gettablebuffer}
+
+We will not go into the details of coaxing and beating \mono{table} macros into
+producing tables like the \filename{booktabs} package: they were never designed
+for that task. We can achieve the simpler parts of the \filename{booktabs}
+recommendation, but for more complicated things such as \type{\cmidrule}, the
+\mono{table} macros do not have enough hooks.
+
+% Aditya: Manual footnote placement
+% This does not work
+% \setupfootnotes[before={\setbox\scratchbox=\vbox\bgroup},
+%                 after={\egroup\raise-5cm\box\scratchbox}] 
+%                 % Cant use raise in vertical mode
+
+\setupfootnotes[before={\vskip-3cm}] %The actual value does not seem to matter.
+
+To achieve lines that get trimmed at the edge of the table, we can use
+\type{\starttable[o0|l|l|ro0|]}, \footnote{Wait a minute! To which column does the
+first \mono{o0} correspond? The table consists of a virtual column at the
+left edge, typically for drawing a vertical line there. The key \mono{o0} in
+the beginning of the preamble sets the width of this virtual column to be zero.}
+which gives:\tinyskip
+
+\startbuffer
+\setuptables[rulethickness=0.03em]
+
+\starttable[o0|l|l|ro0|]
+\HL[3]
+\NC \Use2[c]{Item}         \NC           \NC \AR
+\DL[2]                     \DC               \DR
+\NC Animal \NC Description \NC Price (\$)\NC \AR
+\HL[2]
+\NC Gnat   \NC per gram    \NC 13.65     \NC \AR
+\NC        \NC each        \NC  0.01     \NC \AR
+\NC Gnu    \NC stuffed     \NC 92.50     \NC \AR
+\NC Emu    \NC stuffed     \NC 33.33     \NC \AR
+\HL[3]
+\stoptable
+\stopbuffer
+
+{\gettablebuffer}
+
+\noindent The division line in this case extends to the middle of the second
+column. If the table does not have division lines, adding \type{o0} in the
+beginning and the end of the table preamble is usually sufficient.
+
+\section Controlling space between rows %{{{1
+
+The \mono{table} macros do not provide much control over space between rows of
+the table. You can have loose or tight tables by changing the \mono{distance}
+option of \type{\setuptables}. The \mono{distance} option takes four values:
+\mono{none}, \mono{small}, \mono{medium}, and \mono{big}. The default is
+\mono{medium}. For example, let's reconsider the table of \in
+Section[sec:spanning]. With \type{\setuptables[distance=none]}, we get
+\tinyskip
+
+{\setuptables[distance=none]
+ \gettablebuffer[teams]}
+
+\noindent while with \type{\setuptables[distance=big]} we get
+\tinyskip
+
+{\setuptables[distance=big]
+ \gettablebuffer[teams]}
+
+\noindent Play around with these values to find out what value of
+\mono{distance} you prefer. It is possible to get more control using the
+\type{\OpenUp} macro of the \TABLE\ package, but there is no interface for
+that.  See the discussion on the mailing list~\cite[mailinglist] for an
+example.
+
+% }}}
+
+\section Remembering preambles %{{{1
+
+Often one has several tables which need to have similar formatting.
+Repeating the table preamble in each case is error-prone. \CONTEXT\ provides
+\type{\definetabletemplate} which can be used to specify a table preamble which
+can be reused later. For example, we can say
+\starttyping
+\definetabletemplate[booktabs][o0|l|l|ro0]
+\stoptyping
+
+\noindent Then we can invoke this preamble by 
+\starttyping
+\starttable[booktabs]
+\stoptyping
+
+\section Other features %{{{1
+
+When I started writing these articles on the \mono{table} macros, I thought that one
+article would be enough. About halfway through the first article I realized that I would 
+need more than one article. Now I find that even two are not enough. There are lots
+of things that I have not even touched; using color in tables and breaking the table
+across pages are the most important omissions. These will have to wait for a later
+article in this series. Next issue, we will look at something different.
+
+
+\section References
+
+{
+\vskip-10pt
+\rightskip = 0pt plus4em \hyphenpenalty=10000
+\hfuzz=5pt
+
+\startbibliography[inbetween={\blank[4pt]}]
+  \item[booktabs] Simon Fear and Danie Els, \quotation{Publication quality tables in \LATEX}, 
+    \mono{http://www.ctan.org/\break tex-archive/macros/latex/contrib/booktabs}
+  \item[beginnersmanual] Hans Hagen, \CONTEXT: an excursion. \hfil\break
+    \mono{http://www.pragma-ade.com/show-man-1.htm}
+  \item[core-tab] Hans Hagen, \CONTEXT\ core macros\Dash \TABLE\break embedding.
+    \mono{http://www.logosrl.it/context/\break modules/current/%
+          singles/\rlap{core-tab\_ebook.pdf}}
+  \item[roberts] Andy Roberts, \LaTeX\ Tutorials\Dash Tables. \hfil\break
+    \mono{http://www.andy-roberts.net/misc/latex/\hfil\break latextutorial4.html}
+  \item[mailinglist] Discussion on the \CONTEXT\ mailing list,
+        \mono{http://archive.%
+          contextgarden.net\break/message/20070806.011325.%
+          5a938ae7.en.html}
+\stopbibliography
+}
+
+\vfill
+
+
+% }}}
+\StopArticle
+\stoptext

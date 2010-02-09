@@ -1,0 +1,662 @@
+% engine=xetex
+%AM: I really dislike the "smart" quotes in TeX. XeTeX and LuaTeX 
+%do not change ' to ‘. Ideally, I would have liked to process this 
+%article with LuaTeX but single-column footnotes do not work with MkIV.
+%As a compromise, I am using XeTeX. If anything fails, just remove the
+%above line. I can live with the smart quotes.
+
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+\input tugboat.dates
+\edef\tubpage{\the\count0}
+
+%\hyphenation{stop-lua-code}
+
+\setupcolors[state=start]
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+ \setvariables
+    [tugboat]
+    [year=\tubyear,
+     volume=\tubvol,
+     number=\tubnum,
+     page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\LUATEX: A user's perspective},
+     author={Aditya Mahajan},
+    address={},
+      email={adityam (at) umich dot edu},
+  ]
+
+
+% \setuppapersize[letter][letter]
+
+
+\StartAbstract
+In this article, I explain how to use \LUA\ to write macros in \LUATEX. I give
+some examples of macros that are complicated in \PDFTEX, but can be defined
+easily using \LUA\ in \LUATEX. These examples include macros that do arithmetic
+on their arguments, use loops, and parse their arguments.
+\StopAbstract
+
+\starttext
+\StartArticle 
+
+\section {Introduction}
+
+\TEX\ is getting a new engine\Dash\LUATEX. As its name suggests, \LUATEX\ adds
+\LUA, a programming language, to \TEX, the typesetter. I cannot overemphasize
+the significance of being able to program \TEX\ in a high-level programming
+language. For example, consider a \TEX\ macro that divides two numbers. Such a
+macro is provided by the \filename{fp} package and also by \filename{pgfmath}
+library of the \filename{TikZ} package. The following comment is from the
+\filename{fp} package
+\starttyping
+\def\FP@div#1#2.#3.#4\relax#5.#6.#7\relax{%
+ % [...] algorithmic idea (for x>0, y>0)
+ %   - %determine \FP@shift  such that 
+ %      y*10^\FP@shift < 100000000
+ %                     <=y*10^(\FP@shift+1)
+ %   - %determine \FP@shift' such that 
+ %      x*10^\FP@shift'< 100000000
+ %                     <=x*10^(\FP@shift+1)
+ %   - x=x*\FP@shift'
+ %   - y=y*\FP@shift
+ %   - \FP@shift=\FP@shift-\FP@shift'
+ %   - res=0
+ %   - while y>0 %fixed-point representation!
+ %   -   \FP@times=0
+ %   -	  while x>y
+ %   -     \FP@times=\FP@times+1
+ %   -     x=x-y
+ %   -   end
+ %   -   y=y/10
+ %   -   res=10*res+\FP@times/1000000000
+ %   - end
+ %   - %shift the result according to \FP@shift
+\stoptyping
+
+\noindentation
+The \filename{pgfmath} library implements the macro in a similar way, but limits
+the number of shifts that it does. These macros highlight the state of affairs in
+writing \TEX\ macros. Even simple things like multiplying two numbers are hard;
+you either have to work extremely hard to circumvent the programming
+limitations of \TEX, or, more frequently, hope that someone else has done the
+hard work for you. In \LUATEX, such a function can be written using the
+\type{/} operator (I will explain
+the details later):
+\starttyping
+\def\DIVIDE#1#2{\directlua{tex.print(#1/#2)}}
+\stoptyping
+
+Thus, with \LUATEX\ ordinary users can write simple macros; and, perhaps more
+importantly, can read and understand macros written by \TEX\ wizards.
+
+Since the \LUATEX\ project started it has been actively supported by \CONTEXT.
+\footnote{Not surprising, as two of \LUATEX's main developers\Dash Taco
+Hoekwater and Hans Hagen\Dash are also the main \CONTEXT\ developers.} These days,
+the various \quotation{How do I write such a macro} questions on the \CONTEXT\
+mailing list are answered by a solution that uses \LUA. I present a few such
+examples in this article. I have deliberately avoided examples about fonts and
+non-Latin languages. There is already quite a bit of documentation about them.
+In this article, I want to highlight how to use \LUATEX\ to write macros that
+require some \quotation{flow control}: randomized outputs, loops, and parsing.
+
+
+\section {Interaction between \TEX\ and \LUA}
+
+To a first approximation, the interaction between \TEX\ and \LUA\ is
+straightforward. When \TEX\ (i.e., the \LUATEX\ engine) starts, it loads the
+input file in memory and processes it token by token. When \TEX\ encounters
+\type{\directlua}, it stops reading the file in memory, {\em fully expands the
+argument of\/ \type{\directlua}}, and passes the control to a \LUA\ instance. The
+\LUA\ instance, which runs with a few preloaded libraries, processes the
+expanded arguments of \type{\directlua}. This \LUA\ instance has a special
+output stream which can be accessed using \type{tex.print(...)}. The function
+\type{tex.print(...)} is just like the \LUA\ function \type{print(...)} except
+that \type{tex.print(...)} prints to a \quotation{\TEX\ stream} rather than to
+the standard output. When the \LUA\ instance finishes processing its input, it
+passes the contents of the \quotation{\TEX\ stream} back to \TEX.\footnote{The
+output of \type{tex.print(...)} is buffered and not passed to \TEX\ until the
+\LUA\ instance has stopped.} \TEX\ then inserts the contents of the
+\quotation{\TEX\ stream} at the current location of the file that it was
+reading; expands the contents of the \quotation{\TEX\ stream}; and continues.
+If \TEX\ encounters another \type{\directlua}, the above process is repeated. 
+
+As an exercise, imagine what happens when the following input is processed by
+\LUATEX. 
+\footnote{In this example, I used two different kinds of quotations to
+avoid escaping quotes. Escaping quotes inside  \type{\directlua} is tricky.
+The above was a contrived example; if you ever need to escape quotes, you can
+use the \type{\startluacode ... \stopluacode} syntax explained later.}
+
+\starttyping
+\directlua%
+  {tex.print("Depth 1 
+           \\directlua{tex.print('Depth 2')}")}
+\stoptyping
+
+On top of these \LUATEX\ primitives, \CONTEXT\ provides a higher level
+interface. There are two ways to call \LUA\ from \CONTEXT. The first is a macro
+\type{\ctxlua} (read as \CONTEXT\ \LUA), which is similar to \type{\directlua}.
+(Aside: It is possible to run the \LUA\ instance under different name spaces.
+\type{\ctxlua} is the default name space; other name spaces are explained
+later.) \type{\ctxlua} is good for calling small snippets of \LUA. The argument
+of \type{\ctxlua} is parsed under normal \TEX\ catcodes (category
+codes), so the end
+of line character has the same catcode as a space. This can lead to surprises.
+For example, if you try to use a \LUA\ comment, everything after the comment
+gets ignored.
+\starttyping
+\ctxlua
+  {-- A lua comment
+   tex.print("This is not printed")}
+\stoptyping
+
+This can be avoided by using a \TEX\ comment instead of a \LUA\ comment.
+However, working under normal \TEX\ catcodes poses a bigger problem: special
+\TEX\ characters like \letterampersand, \letterhash, \letterdollar, \{, \}, etc.,
+need to be escaped. For example, \letterhash\ has to be escaped with
+\type{\string} to be used in \type{\ctxlua}.
+\starttyping
+\ctxlua
+  {local t = {1,2,3,4}
+   tex.print("length " .. \string#t)}
+\stoptyping
+
+As the argument of \type{\ctxlua} is fully expanded, escaping
+characters can sometimes be tricky. To circumvent this problem, \CONTEXT\
+defines a  environment called \type{\startluacode ... \stopluacode}. This sets
+the catcodes to what one would expect in \LUA. Basically only \type{\}
+has its usual \TEX\
+meaning, the catcode of everything else is set to other. So, for all practical
+purposes, we can forget about catcodes inside \type{\startluacode ...
+\stopluacode}. The above two examples can be written as
+\starttyping
+\startluacode
+  -- A lua comment
+   tex.print("This is printed.")
+  local t = {1,2,3,4}
+   tex.print("length " .. #t)
+\stopluacode
+\stoptyping
+
+This environment is meant for moderately sized code snippets. For longer \LUA\
+code, it is more convenient to write the code in a separate \LUA\ file and then
+load it using \LUA's \type{dofile(...)} function. 
+
+\CONTEXT\ also provides a \LUA\ function to conveniently write to the \TEX\
+stream. The function is called \type{context(...)} and it is equivalent to
+\type{tex.print(string.format(...))}. 
+
+Using the above, it is easy to define \TEX\ macros that pass control to
+\LUA, do some processing in \LUA, and then pass the result back to \TEX. For
+example, a macro to convert a decimal number to hexadecimal can be
+written simply, by asking \LUA\ to do the conversion.
+\starttyping
+\def\TOHEX#1{\ctxlua{context("\%X",#1)}}
+\TOHEX{35}
+\stoptyping
+
+\noindentation
+The percent sign had to be escaped because \type{\ctxlua} assumes
+\TEX\ catcodes. Sometimes, escaping arguments can be difficult; instead,
+it can be
+easier to define a \LUA\ function inside \type{\startluacode ... \stopluacode}
+and call it using \type{\ctxlua}. For example, a macro
+that takes a comma separated list of strings and prints a random item can be
+written as 
+\starttyping
+\startluacode
+  userdata = userdata or {}
+  math.randomseed( os.time() )
+  function userdata.random(...)
+    context(arg[math.random(1, #arg)])
+  end
+\stopluacode
+  
+\def\CHOOSERANDOM#1%
+  {\ctxlua{userdata.random(#1)}}
+
+\CHOOSERANDOM{"one", "two", "three"}
+\stoptyping
+
+I could have written a wrapper so that the function takes a list of words and
+chooses a random word among them. For an example of such a conversion, see
+the \quotation{sorting a list of tokens} page on the \LUATEX\
+wiki~\cite[luatex-wiki].
+
+In the above, I created a name space called \type{userdata} and defined the
+function \type{random} in that name space. Using a name space avoids clashes
+with the \LUA\ functions defined in \LUATEX\ and \CONTEXT.
+
+In order to avoid name clashes, \CONTEXT\ also defines independent name spaces of
+\LUA\ instances. They are 
+\startnarrower
+\setuptabulate[before={\blank[small]}, after={\blank[medium]}]
+\starttabulate[|rT|p|]
+  \NC user     \EQ a private user instance        \NC\AR
+  \NC third    \EQ third party module instance    \NC\AR
+  \NC module   \EQ \CONTEXT\ module instance      \NC\AR
+  \NC isolated \EQ an isolated instance           \NC\AR
+\stoptabulate
+\stopnarrower
+
+Thus, for example, instead of \type{\ctxlua} and \type{\startluacode ...
+\stopluacode}, the \type{user} instance can be accessed via the macros
+\type{\usercode}
+and \type{\startusercode ... \stopusercode}. In instances other than
+\type{isolated}, all the \LUA\ functions defined by \CONTEXT\ (but
+not the inbuilt \LUA\ functions) are stored in a \type{global} name space. In
+the \type{isolated} instance, all \LUA\ functions defined by \CONTEXT\ are
+hidden and cannot be accessed. Using these instances, we could
+write the above \type{\CHOOSERANDOM} macro as follows
+\starttyping
+\startusercode
+  math.randomseed( global.os.time() )
+  function random(...)
+    global.context(arg[math.random(1, #arg)])
+  end
+\stopusercode
+
+\def\CHOOSERANDOM#1%
+  {\usercode{random(#1)}}
+\stoptyping
+
+Since I defined the function \type{random} in the \type{user}
+instance of \LUA, I did not bother to use a separate name space for the
+function. The \LUA\ functions \type{os.time}, which is defined by a \LUATEX\
+library, and \type{context}, which is defined by \CONTEXT, needed to be accessed
+through a \type{global} name space. On the other hand, the
+\type{math.randomseed} function, which is part of \LUA, could be accessed as is. 
+
+A separate \LUA\ instance also makes debugging slightly easier. With
+\type{\ctxlua} the error message starts with
+\starttyping
+! LuaTeX error <main ctx instance>:
+\stoptyping
+
+\noindentation
+With \type{\usercode} the error message starts with
+\starttyping
+! LuaTeX error <private user instance>:
+\stoptyping
+
+\noindentation This makes it easier to narrow down the source of error. 
+
+Normally, it is best to define your \LUA\ functions in the \type{user} name
+space. If you are writing a module, then define your \LUA\ functions in the
+\type{third} instance and in a name space which is the name of your module. In
+this article, I will simply use the default \LUA\ instance, but take care to
+define all my \LUA\ functions in a \type{userdata} name space.
+
+Now that we have some idea of how to work with \LUATEX, let's look at some
+examples.
+
+\section {Arithmetic without using a abacus}
+
+Doing simple arithmetic in \TEX\ can be extremely difficult, as illustrated by
+the division macro in the introduction. With \LUA, simple arithmetic becomes
+trivial. For example, if you want a macro to find the cosine of an angle (in
+degrees), you can write
+\starttyping
+\def\COSINE#1%
+  {\ctxlua(context(math.cos(#1*2*pi/360))}
+\stoptyping
+
+The built-in \type{math.cos} function assumes that the argument is specified in
+radians, so we convert from degrees to radians on the fly. If you want to
+type the value of $\pi$ in an article, you can simply say
+\starttyping
+$\pi = \ctxlua{context(math.pi)}$ 
+\stoptyping
+\noindentation or if you want less precision (notice the percent sign is
+escaped)
+\starttyping 
+$\pi = \ctxlua{context("\%.6f", math.pi)}$
+\stoptyping
+
+
+\section {Loops without worrying about expansion}
+
+\startbuffer[table-setup]
+\setupTABLE[each][each][width=2em,height=2em,align={middle,middle}]  
+\setupTABLE[r][1][background=color,backgroundcolor=gray]  
+\setupTABLE[c][1][background=color,backgroundcolor=gray]
+\stopbuffer
+
+\getbuffer[table-setup]
+
+\startbuffer[table-type]
+\bTABLE  
+  \bTR \bTD $(+)$ \eTD \bTD 1 \eTD \bTD 2 \eTD 
+       \bTD 3 \eTD \bTD 4  \eTD \bTD 5  \eTD \bTD 6  \eTD \eTR  
+  \bTR \bTD 1     \eTD \bTD 2 \eTD \bTD 3 \eTD 
+       \bTD 4 \eTD \bTD 5  \eTD \bTD 6  \eTD \bTD 7  \eTD \eTR  
+  \bTR \bTD 2     \eTD \bTD 3 \eTD \bTD 4 \eTD 
+       \bTD 5 \eTD \bTD 6  \eTD \bTD 7  \eTD \bTD 8  \eTD \eTR  
+  \bTR \bTD 3     \eTD \bTD 4 \eTD \bTD 5 \eTD
+       \bTD 6 \eTD \bTD 7  \eTD \bTD 8  \eTD \bTD 9  \eTD \eTR  
+  \bTR \bTD 4     \eTD \bTD 5 \eTD \bTD 6 \eTD
+       \bTD 7 \eTD \bTD 8  \eTD \bTD 9  \eTD \bTD 10 \eTD \eTR  
+  \bTR \bTD 5     \eTD \bTD 6 \eTD \bTD 7 \eTD 
+       \bTD 8 \eTD \bTD 9  \eTD \bTD 10 \eTD \bTD 11 \eTD \eTR  
+  \bTR \bTD 6     \eTD \bTD 7 \eTD \bTD 8 \eTD 
+       \bTD 9 \eTD \bTD 10 \eTD \bTD 11 \eTD \bTD 12 \eTD \eTR  
+\eTABLE
+\stopbuffer
+
+Loops in \TEX\ are tricky because macro assignments and macro expansion interact
+in strange ways. For example, suppose we want to typeset a table showing the sum
+of the roll of two dice and want the output to look like this
+\placetable
+    [here,none]
+    {none}
+    {\getbuffer[table-type]}
+
+The tedious (but  faster!)\ way to achieve this is to simply type the whole table
+by hand. For example, 
+\starttyping
+\bTABLE
+  \bTR \bTD $(+)$ \eTD \bTD 1 \eTD ... ... \eTR
+  \bTR \bTD   1   \eTD \bTD 2 \eTD ... ... \eTR
+  ...   ...   ...   ...   ...   ...
+  ...   ...   ...   ...   ...   ...
+\eTABLE
+\stoptyping
+
+It is however natural to want to write this table as a loop, and compute
+the values. A first \CONTEXT\
+implementation using the recursion level might be:
+\startbuffer[expansion-1]
+\bTABLE  
+ \bTR  
+  \bTD $(+)$ \eTD  
+  \dorecurse{6}  
+   {\bTD \recurselevel \eTD}  
+  \eTR  
+\dorecurse{6}  
+ {\bTR  
+     \bTD \recurselevel \eTD  
+     \edef\firstrecurselevel{\recurselevel}  
+  \dorecurse{6}  
+  {\bTD 
+   \the\numexpr\firstrecurselevel+\recurselevel 
+  \eTD}%
+  \eTR}  
+\eTABLE
+\stopbuffer
+
+\typebuffer[expansion-1]
+
+\noindentation However, this does not work as expected, yielding all zeros.
+%
+%% Darn...pdftex and xetex behave differently here. So, cheating.
+%\def\recurselevel{0}
+%\placetable
+%    [here,none]
+%    {none}
+%    {\getbuffer[expansion-1]}
+%
+A natural table stores the contents of all the cells, before typesetting
+it. But
+it does not expand the contents of its cell before storing them. So, at the time
+the table is actually typeset, \TEX\ has already finished the \type{\dorecurse}
+and \type{\recurselevel} is set to 0.
+
+The solution is to place
+\type{\expandafter} at the correct location(s) to coax \TEX\ into expanding
+the \type{\recurselevel} macro before the natural table stores the cell contents. The
+difficult part is figuring out the exact location of \type{\expandafter}s. Here
+is a solution that works:
+
+\startbuffer[expansion-2]
+\bTABLE  
+ \bTR  
+  \bTD $(+)$ \eTD  
+  \dorecurse{6}  
+   {\expandafter \bTD \recurselevel \eTD}  
+  \eTR  
+\dorecurse{6}  
+{\bTR  
+ \edef\firstrecurselevel{\recurselevel}  
+ \expandafter\bTD \recurselevel \eTD  
+ \dorecurse{6}  
+ {\expandafter\bTD
+  \the\numexpr\firstrecurselevel+\recurselevel
+  \relax
+  \eTD}  
+ \eTR}  
+\eTABLE  
+\stopbuffer
+
+\typebuffer[expansion-2]
+
+% \placetable
+%     [here,none]
+%     {none}
+%     {\getbuffer[expansion-2]}
+
+We only needed to add three \type{\expandafter}s to make the naive loop work.
+Nevertheless, finding the right location of \type{\expandafter} can be
+frustrating, especially for a non-expert.
+
+\hfuzz=1pt
+By contrast, in \LUATEX\ writing loops is easy.
+Once a \LUA\ instance starts, \TEX\ does not see anything until the \LUA\
+instance exits. So, we can write the loop in \LUA, and simply print the values
+that we would have typed to the \TEX\ stream. When the control is passed to
+\TEX, \TEX\ sees the input as if we had typed it by hand. Consequently, macro
+expansion is no longer an issue. For example, we can get the above table by:
+\starttyping
+\startluacode
+context.bTABLE()
+  context.bTR()
+    context.bTD() context("$(+)$") context.eTD()
+    for j=1,6 do
+      context.bTD() context(j) context.eTD()
+    end
+  context.eTR()
+  for i=1,6 do
+    context.bTR()
+    context.bTD() context(i) context.eTD()
+    for j=1,6 do
+      context.bTD() context(i+j) context.eTD()
+    end
+    context.eTR()
+  end
+context.eTABLE()
+\stopluacode
+\stoptyping
+%cld=http://www.pragma-ade.com/general/manuals/cld-mkiv.pdf 
+
+The \LUA\ functions such as \type{context.bTABLE()}
+and \type{context.bTR()} are  just
+abbreviations for running \type{context ("\\bTABLE")},
+\type{context("\\bTR")}, etc. See the
+\CONTEXT\ \LUA\ document manual for more details about such
+functions~\cite[cld]. The rest of the code is a simple nested for-loop that
+computes the sum of two dice. We do not need to worry about macro expansion at
+all!
+
+\section {Parsing input without exploding your~head}
+
+In order to get around the weird rules of macro expansion, writing a parser in
+\TEX\ involves a lot of macro jugglery and catcode trickery. It is a black art,
+one of the biggest mysteries of \TEX\ for ordinary users.
+
+As an
+example, let's consider typesetting chemical molecules in \TEX. Normally,
+molecules should be typeset in text mode rather than math mode. For example,
+H\low{2}SO\lohi{4}{--}, can be input as \type{H\low{2}SO\lohi{4}{--}}. Typing so
+much markup can be cumbersome. Ideally, we want a macro such that we
+type \type{\molecule{H_2SO_4^-}} and the macro translates this into
+\type{H\low{2}SO\lohi{4}{--}}. Such a macro can be written in \TEX\ as follows.
+\starttyping
+\newbox\chemlowbox 
+\def\chemlow#1% 
+  {\setbox\chemlowbox
+           \hbox{{\switchtobodyfont[small]#1}}} 
+
+\def\chemhigh#1% 
+  {\ifvoid\chemlowbox 
+      \high{{\switchtobodyfont[small]#1}}% 
+   \else 
+      \lohi{\box\chemlowbox}
+           {{\switchtobodyfont[small]#1}}
+   \fi} 
+
+\def\finishchem%
+  {\ifvoid\chemlowbox\else 
+      \low{\box\chemlowbox}
+   \fi} 
+
+\unexpanded\def\molecule% 
+  {\bgroup 
+   \catcode`\_=\active \uccode`\~=`\_ 
+       \uppercase{\let~\chemlow}% 
+   \catcode`\^=\active \uccode`\~=`\^ 
+       \uppercase{\let~\chemhigh}% 
+   \dostepwiserecurse {65}{90}{1} 
+   {\catcode \recurselevel = \active 
+    \uccode`\~=\recurselevel 
+        \uppercase{\edef~{\noexpand\finishchem 
+    \rawcharacter{\recurselevel}}}}% 
+    \catcode`\-=\active \uccode`\~=`\- 
+        \uppercase{\def~{--}}% 
+    \domolecule }% 
+
+\def\domolecule#1{#1\finishchem\egroup}
+\stoptyping
+
+This monstrosity is a typical \TEX\ parser. Appropriate characters need to be
+made active; occasionally, \type{\lccode} and \type{\uccode} need to be set;
+signaling tricks are needed (for instance, checking if \type{\chemlowbox} is
+void); and then magic happens (or so it seems to a flabbergasted user). More
+sophisticated parsers involve creating finite state automata, which look
+even more monstrous.
+
+With \LUATEX, things are different.  \LUATEX\ includes a general parser based on
+\acro{PEG} (parsing expression grammar) called
+\type{lpeg}~\cite[lpeg]. This makes writing parsers in \TEX\ much
+more comprehensible. For example, the above \type{\molecule} macro can be
+written as
+
+\starttyping
+\startluacode
+userdata = userdata or {}
+
+local lowercase   = lpeg.R("az")
+local uppercase   = lpeg.R("AZ")
+local backslash   = lpeg.P("\\")
+local csname      = backslash * lpeg.P(1) 
+                  * (1-backslash)^0
+local plus        = lpeg.P("+") / "\\textplus "
+local minus       = lpeg.P("-") / "\\textminus "
+local digit       = lpeg.R("09")
+local sign        = plus + minus
+local cardinal    = digit^1
+local integer     = sign^0 * cardinal
+local leftbrace   = lpeg.P("{")
+local rightbrace  = lpeg.P("}")
+local nobrace     = 1 - (leftbrace + rightbrace)
+local nested      = lpeg.P {leftbrace 
+                  * (csname + sign + nobrace 
+                  + lpeg.V(1))^0   * rightbrace}
+local any         = lpeg.P(1)
+
+local subscript   = lpeg.P("_")
+local superscript = lpeg.P("^")
+local somescript  = subscript + superscript
+
+local content     = lpeg.Cs(csname + nested 
+                           + sign + any)
+
+local lowhigh    = lpeg.Cc("\\lohi{%s}{%s}") 
+                   * subscript   * content 
+                   * superscript * content 
+                   / string.format
+local highlow    = lpeg.Cc("\\hilo{%s}{%s}") 
+                   * superscript * content 
+                   * subscript   * content 
+                   / string.format
+local low        = lpeg.Cc("\\low{%s}") 
+                   * subscript   * content       
+                   / string.format
+local high       = lpeg.Cc("\\high{%s}")
+                   * superscript * content
+                   / string.format
+local justtext   = (1 - somescript)^1
+local parser     = lpeg.Cs((csname + lowhigh 
+                        + highlow + low 
+                        + high + sign + any)^0)
+
+userdata.moleculeparser = parser 
+
+function userdata.molecule(str)
+    return parser:match(str)
+end
+\stopluacode
+
+\def\molecule#1%
+  {\ctxlua{userdata.molecule("#1")}}
+\stoptyping 
+
+This is more verbose than the \TEX\ solution, but is easier to read and write.
+With a proper parser, I do not have to use tricks to check if either one or both
+\type{_} and \type{^} are present. More importantly,  anyone (once they know the
+\LPEG\ syntax) can read the parser and easily understand what it does. This is
+in contrast to the implementation based on \TEX\  macro jugglery which require
+you to implement a \TEX\ interpreter in your head to understand.
+
+\section {Conclusion}
+
+\LUATEX\ is removing many \TEX\ barriers: using system fonts,
+reading and writing Unicode files, typesetting non-Latin languages, among
+others. However, the biggest feature of \LUATEX\ is the ability to use a
+high-level programming language to program \TEX. This can potentially lower the
+learning curve for programming \TEX.
+
+In this article, I have mentioned only one aspect of programming \TEX: macros
+that manipulate their input and output some text to the main \TEX\
+stream. Many other
+kinds of manipulations are possible: \LUATEX\ provides access to \TEX\ boxes,
+token lists, dimensions, glues, catcodes, direction parameters, math parameters,
+etc. The details can be found in the \LUATEX\  manual~\cite[manual].
+
+\section {References}
+
+{
+\vskip-10pt
+\spaceskip = \fontdimen2\font
+\rightskip = 0pt plus4em \hyphenpenalty=10000
+\hfuzz=5pt
+
+\startbibliography[inbetween={\blank[4pt]}]
+  \nonknuthmode %Makes the catcode of _ and ^ as letter
+  \item[manual] \LUATEX\ reference manual, 
+    \mono{http://www.luatex.org/documentation.html}
+  \item[luatex-wiki] Sorting a list of tokens, in the Joy of \LUATEX. 
+    \mono{http://luatex.bluwiki.com/go/\crlf Sort_a_token_list}
+  \item[cld] Hans Hagen, \quotation{CLD: \CONTEXT\ \LUA\ document}, \crlf
+    \mono{http://www.pragma-ade.com/general/\crlf manuals/cld-mkiv.pdf}
+  \item[lpeg] \LPEG: Parsing Expression Grammars for \LUA, 
+    \mono{http://www.inf.puc-rio.br/\~{}roberto/lpeg/\crlf lpeg.html}
+
+\stopbibliography
+
+}
+
+% context uses count1 instead of count0 for the page number
+{\count0=\count1 \writelastpage{+1}}
+
+\StopArticle
+\stoptext
