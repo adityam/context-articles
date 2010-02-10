@@ -1,0 +1,236 @@
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+\setupbodyfontenvironment[default][em=italic]
+% I prefer emphasized text to be italic rather than slanted
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+%\setvariables
+%   [tugboat]
+%   [year=\tubyear,
+%    volume=\tubvol,
+%    number=\tubnum,
+%    page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: conditional processing},
+     author={Aditya Mahajan},
+    address={},
+      email={adityam (at) umich dot edu},
+  ]
+
+
+\definealternativestyle [emph]     [\em]     []
+
+\StartAbstract
+Many-a-times, you want to to generate multiple versions of the same document.
+One version for printing and one for viewing on the screen; one version for
+students and one version for the instructor; and so on. You can do this a
+naive way. Create different files with setup for the different versions and
+\type{\input} the common material, or create some new conditional flags using
+\type{\newif} and set them appropriately for conditional processing. Or you
+could use \emph{modes}|<|the \CONTEXT\ way of doing conditional processing.
+\StopAbstract
+
+\starttext
+\StartArticle 
+
+\section {Introduction}
+
+A mode is similar to a conditional flag, but with a few advantages. New modes
+need not be explicitly defined (no need for something like \type|\newif|),
+multiple modes can be simultaneously enabled or disabled, the status of multiple
+modes can be checked easily. Moreover, modes can be set from a command line
+switch. So, multiple versions of a document can be generated without changing
+the source file.
+
+The name or identifier of a mode can be any combination of letters, digits, or
+spaces. Names starting with \type{*} are reserved for system modes. 
+
+In this article I explain how to activate a mode and how to check if a mode is
+active or not. 
+
+\section {Setting modes}
+
+\CONTEXT\ has three commands for setting modes:
+\startitemize
+  \item \type{\enablemode [...]}
+  \item \type{\disablemode[...]}
+  \item \type{\preventmode[...]}
+\stopitemize
+The names are self explanatory. \type{\enablemode} activates a mode,
+\type{\disablemode} deactivates a mode, and \type{\preventmode} permanently
+deactivates a mode. All three commands take a list of modes as an argument. For
+example,  you can  activate \type{screen} and \type{solution} modes by
+\starttyping
+    \enablemode[screen,solution]
+\stoptyping
+
+Modes can also be activated by a command line switch \type|-|\type|-modes| to
+\type{texexec} and \type{context}. For example, to activate \type{screen} and
+\type{solution} modes, you can run \CONTEXT\ using
+\starttyping 
+    texexec --mode=screen,solution ...
+\stoptyping
+\noindentation or 
+\starttyping 
+    context --mode=screen,solution ...
+\stoptyping
+
+
+\section {Conditional processing based on modes}
+
+Suppose you want to change the paper size of a document depending on whether it
+is for print or screen. This can be done in multiple ways. You could either set
+a default paper size for print and change it for screen:
+\starttyping
+  \setuppapersize[letter][letter]
+
+  \startmode[screen]
+    \setuppapersize[S6][S6]
+  \stopmode
+\stoptyping
+\noindentation 
+(S6 is one of the screen-optimized paper sizes in \CONTEXT; the paper size has a
+4:3 aspect ratio and a width equal to the width of A4 paper.) Alternatively, you
+could set a default paper size for screen and change it if the screen mode is
+not enabled:
+\starttyping
+  \setuppapersize[S6][S6]
+
+  \startnotmode[screen]
+    \setuppapersize[letter][letter]
+  \stopnotmode
+\stoptyping
+
+\type|\startmode| and \type|\startnotmode| can check for multiple modes. The
+arguments to \type|\startmode| and \type|\startnotmode| can be a list of modes.
+\type|\startmode| processes its contents (everything until the next
+\type|\stopmode|\footnote{This means that \type|\startmode| cannot be nested.})
+if any of the modes are enabled, otherwise (i.e., when all the modes are
+disabled) \type|\startmode| ignores it contents. \type|\startnotmode| is the
+opposite. It processes its contents (everything until the next
+\type|\stopnotmode| if any of the modes are disabled, otherwise (i.e., when all
+the mods are enabled) \type|\startnotmode| ignores its contents.
+
+\type|\startmode| and \type|\startnotmode| are \emph{or} environments. They
+process their contents if any of the modes satisfy the required condition. Their
+\emph{and} counterparts are \type|\startallmodes| and \type|\startnotallmodes|,
+which process their contents only if all the modes satisfy the required
+condition. For example, suppose you want to enable interaction (hyperlinks) etc.
+only when both \type|screen| and \type|solution| modes are enabled. Then you can
+use:
+\starttyping
+  \startallmodes[screen,solution]
+    \setupinteraction[state=start]
+  \stopallmodes
+\stoptyping
+
+To summarize, the four start-stop environments for checking modes are:
+\starttyping
+\startmode[mode1, mode2, ...]
+  % Process if one of the modes is enabled
+\stopmode
+
+\startnotmode[mode1, mode2, ...]
+  % Process if one of the modes is disabled
+\stopnotmode
+
+\startallmodes[mode1, mode2, ...]
+  % Process if all modes are enabled
+\stopallmodes
+
+\startnotallmodes[mode1, mode2, ...]
+  % Process if all the modes are disabled
+\stopnotallmodes
+\stoptyping
+
+These environments have a \type|\doif| alternative that are useful for short
+setups and can also be nested.
+
+\starttyping
+\doifmode        {modes} {content}
+\doifnotmode     {modes} {content}
+\doifallmodes    {modes} {content}
+\doifnotallmodes {modes} {content}
+\stoptyping
+\noindentation 
+The logic for determining when the content is processes is exactly the same as
+for the \type|start|-\type|stop| alternatives.
+
+These \type|\doif| commands have a variant that can process something else if
+the conditions are not satisfied (like the \type|\else| branch of \type|\if|).
+\starttyping
+\doifmodeelse    {modes} {content} {alternative}
+\doifnotmodeelse {modes} {content} {alternative}
+\doifallmodeselse{modes} {content} {alternative}
+\doifnotallmodeselse{modes} 
+                         {content} {alternative}
+\stoptyping
+
+\section[sec:system] {System modes} 
+
+In addition to user-defined modes, \CONTEXT\ provides some system modes. These
+modes start with a \type{*}. Here I will only explain the more commonly used
+system modes. You can see the \CONTEXT\ modes manual
+\footnote[modes]{\hyphenatedurl{http://pragma-ade.com/general/manuals/mmodes.pdf}}
+for a complete list of system modes.
+
+Perhaps the most useful system modes are \type|*mkii| and \type|*mkiv| which
+determine whether \MKII\ or \MKIV is being used. These modes are handy when you
+want different setups for \MKII\ and \MKIV.
+
+Other modes are useful for very specific situations. Some of these are described
+below.
+
+A document multiple times to get the cross referencing, table of contents, etc.\
+right. However, sometimes you need to do some external processing (like graphic
+conversion) that only needs to be done only once. In such cases, the
+\type|*first| mode is handy, which checks for the first run of the document. 
+
+You can use the project-product-component structure for managing large projects
+like a book series. See the \CONTEXT\
+wiki\footnote{\hyphenatedurl{http://wiki.contextgarden.net/Project_structure}}
+for details. Both product and components can be compiled separately. 
+Sometimes you want to process a component differently depending on whether it is
+being compiled directly, or if the complete product is being compiled. This can
+be checked using the modes \type|*project|, \type|*product|, \type|*component|,
+and \type|*environment|. For example, the \type|*product| mode is set whenever a
+product file is read (more specifically, whenever a \type|\startproduct| is
+encountered). Similarly, a mode \type|*text| is enabled whenever a
+\type|\starttext| is encountered. 
+
+A large document is also broken down into different section blocks like
+frontmatter, bodymatter, appendices, and backmatter. Internally, these section
+blocks are refered as \type|frontpart|, \type|backpart|, \type|appendix|, and
+\type|backmatter|. Each section block sets a system mode with the same name. So,
+if you want macros that work differently for different section blocks, you can
+check for \type|*fronpart|, \type|*backpart|, \type|*appendix|, and
+\type|*backmatter| modes. 
+
+\CONTEXT\ provides support for multiple language. Language are recognized by
+their IETF language tags, like \type|en-us| for US English, \type|en-gb|
+for British English, \type|nl| for Dutch, \type|de| for German, etc. A document
+has a main language set using \type|\mainlanguage[...]| that is sued for
+translated labels like \emph{chapter} and \emph{figure}. You can also switch the
+current language using \type|\language[...]| to change the hyphenation rules.
+Whenever a language is chosen, its id is set as mode. The mode for the main
+language starts with two \type{*}. For example, when the main language is US
+English and the current language is Dutch, the modes \type|**en-us| and
+\type|*nl| are set (notice the extra \type|*| in \type|**en-us|). 
+
+Other system modes are \type|*figure| which is set when a graphic is found,
+\type|*interaction| which is set when interaction is enabled, \type|*grid| which
+is set when grid typesetting is enabled, and \type|*pdf| and \type|*dvi| which
+are set depending on the whether we are generating \PDF\ or \DVI\ output. Others
+are too esoteric to desribe here. If you are interested, see the 
+modes manual\note[modes].
+
+\StopArticle
+\stoptext
