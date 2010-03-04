@@ -1,15 +1,14 @@
 Articles written for [TUGBoat]
 
-ConTeXt Macros for users
-========================
+== ConTeXt Macros for users ==
 
 * [Font Styles]
 * [Table Macros I]
 * [Table Macros II]
 * [Indentation]
 
-Tug 2009
-========
+== Tug 2009 ==
+
 * [Opentype Math]
 * [LuaTeX]
 
