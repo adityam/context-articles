@@ -1,0 +1,393 @@
+\usemodule[tug-02]
+\input tugboat.dates
+\setfirstpageafter{hellstrom}
+
+\def\myparindent{20pt}
+\def\myindent{\leavevmode\hbox to \myparindent{\hfil}}
+
+\def\mystrut{\vrule width0pt height2.6ex depth0pt }
+
+\setuplayout[lines=0] 
+
+\definebodyfontenvironment    [8pt] [typing=8pt] %This is what footnotes use
+\definebodyfontenvironment    [9pt] [typing=9pt] %8pt looks too small to me
+\definebodyfontenvironment   [10pt] [typing=9pt]
+\definebodyfontenvironment   [12pt] [typing=9pt]
+\definebodyfontenvironment [14.4pt] [typing=9pt]
+
+\setuptyping[style={\switchtobodyfont[typing]\tt}]
+
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+\setvariables
+  [tugboat]
+  [year=\tubyear,
+   volume=\tubvol,
+   number=\tubnum,
+   page=\startpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Font~styles},
+   subtitle={Font Styles}, % Subtitle does not work :-(
+     author={Aditya Mahajan},
+    address={University of Michigan},
+      email={adityam (at) umich dot edu},
+  ]
+
+\useURL[manuals][http://pragma-ade.com/show-man-1.htm]
+\useURL[sources][http://www.logosrl.it/context/modules/]
+\useURL[mailing][http://wiki.contextgarden.net/ConTeXt_Mailing_Lists]
+\useURL[existingfonts][http://pragma-ade.com/general/manuals/showfont.pdf]
+\useURL[newfonts][http://pragma-ade.com/general/manuals/mfonts.pdf]
+\useURL[tfmetrics][http://pragma-ade.com/general/technotes/tfmetrics.pdf]
+
+\starttext
+\StartArticle
+
+\StartAbstract
+  This article presents a summary of different ways of changing font styles
+   in \CONTEXT.
+\StopAbstract
+
+\vskip-6pt
+\section Introduction
+
+The \TUGBOAT\ editors recently invited me to write a regular column
+in \TUGBOAT\  explaining some of the basic features of \CONTEXT. This column
+is meant for \CONTEXT\ beginners, and will explain how basic elements of
+\CONTEXT\ work. I will explain it from the practicable point of view, that is,
+do this, and you will get this; to understand what is happening behind the
+scenes you need to read the \CONTEXT\ manuals \footnote[manual]{\mystrut
+{\tt \from[manuals]}}
+and the \CONTEXT\ sources.\footnote{\mystrut {\tt \from[sources]}}
+
+\myindent
+In this first installment, I will discuss how to use the various font styles in
+\CONTEXT. Fonts are one of the most complicated parts of \TEX. Fortunately,
+the macro developers take care of the dirty stuff, and most of the user
+interface is clean. Nevertheless, understanding the various options of the
+user interface can be intimidating.  As a beginner, one does not want to know
+all the nitty|-|gritty details, but just the basic features. We hope to
+present these in this article.
+
+In \CONTEXT\ there are five ways to switch fonts:
+\blank[halfline]
+
+\startitemize[n,joinedup,nowhite,after,intro]
+  \item font style (\type{\rm}, \type{\ss}, etc.),
+  \item font size  (\type{\tfa}, \type{\tfb}, etc.),
+  \item alternative font style (\type{\bold}, \type{\sans}, etc.),
+% \item body font switch (\type{\tenpoint}, \type{\eightpoint}, etc.)
+  \item a complete font change (\type{\setupbodyfont},
+    \type{\switchtobodyfont}).
+\stopitemize
+\vskip -6pt
+
+I will briefly explain each of these.
+%The rest of the article is
+%going to assume that the font typefaces are set up correctly. 
+%You do not need
+%to worry about font typefaces unless you are adding support for a new font.
+%Idris's article in this issue explains how to do that.
+
+\section Font styles
+
+There are three types of font families: serif, sans serif, and teletype.  To
+switch between these families, use \type{\rm} for serif, \type{\ss} for sans
+serif, and \type{\tt} for teletype.
+
+Each of these families come in different
+styles: upright, bold, italic, slanted, bold|-|italic, bold|-|slanted, and
+small caps. To switch to a different style, use \type{\tf} for upright,
+\type{\bf} for bold, \type{\it} for italic, \type{\sl} for slanted, \type{\bi}
+for bold|-|italic, \type{\bs} for bold|-|slanted, and \type{\sc} for
+small|-|capped.
+
+You can generally combine font families and font styles,
+so if you want to switch to bold sans serif, you can use either \type{\bf\ss} or
+\type{\ss\bf}. 
+
+\starthiding
+These options are summarized in \in Table[tab:font-switches].
+\startcomment
+  The table looks weird as most fonts do not come out correct. I have managed
+  to get bold teletype to work earlier, but I have no clue about bold italic
+  sans. Is it missing from latin modern, or is it missing from context
+  definitions. Since this is an introductory article, these details will be an
+  overkill, so I am deleting the table :-(
+\stopcomment
+
+\placetable
+    [tab:font-switches]
+    [here,top,bottom]
+    {Font switches for changing font styles}
+    \bgroup%{{{
+    \starttable[|ls(1em)|l|l|l|]
+      \HL[3]
+      \BL[4] \SR
+      \NC \ReFormat[cB] {switch} 
+      \NC \ReFormat[cB] {\tex{rm} roman}
+      \NC \ReFormat[cB] {\tex{ss} sans serif}
+      \NC \ReFormat[cB] {\tex{tt} typewriter}
+      \NC \SR
+      \HL[2]
+      \NC \tex{tf} 
+      \NC {\tf normal/upright}
+      \NC {\tf\ss normal/upright}
+      \NC {\tf\tt normal/upright}
+      \NC \FR
+      \NL
+      \NC \tex{it}
+      \NC {\it italics}
+      \NC {\it\ss italics}
+      \NC {\it\tt italics}
+      \NC \MR
+      \NL
+      \NC \tex{sl}
+      \NC {\sl slanted}
+      \NC {\sl\ss slanted}
+      \NC {\sl\tt slanted}
+      \NC \MR
+      \NL
+      \NC \tex{bf}
+      \NC {\bf bold}
+      \NC {\bf\ss bold}
+      \NC {\bf\tt bold}
+      \NC \MR
+      \NL
+      \NC \tex{bi}
+      \NC {\bi bold italic}
+      \NC {\bi\ss bold italic}
+      \NC {\bi\tt bold italic}
+      \NC \MR
+      \NL
+      \NC \tex{bs}
+      \NC {\bs bold slanted}
+      \NC {\bs\ss bold slanted}
+      \NC {\bs\tt bold slanted}
+      \NC \LR
+      \HL[3]
+    \stoptable
+    \egroup %}}}
+\stophiding
+
+There is a font switch \type{\em} to {\em emphasize} text. This is somewhat
+special: it does automatic italic correction and changes the style depending
+on the current font style. For example, if the current font style is upright,
+\type{\em} switches to slanted; and if the current font style is slanted,
+\type{\em} switches to upright.
+
+\ConTeXt\ uses the Latin Modern fonts by default; these fonts look
+similar to the original Computer Modern fonts, but have a much larger
+character repertoire.  As it happens, in the Latin Modern (and Computer
+Modern) fonts, the \slanted{slanted} font does not stand out from the
+upright font enough for some tastes; so, many people prefer to use the
+\italic{italic} font for emphasis. To do that use
+
+\vskip-6pt
+\starttyping
+\definebodyfontenvironment[default][em=italic]
+\stoptyping
+\vskip-6pt
+
+A font switch remains valid for the rest of the group. So, if you want to
+temporarily switch to a different font, use the font style command inside a
+group. The easiest way to start a group is to enclose the text within braces
+(also called curly brackets), for example
+
+\startbuffer
+This is serif text
+{\ss This is sans serif}
+{\tt and this is typewriter}
+\stopbuffer
+
+\vskip-6pt
+\typebuffer
+\vskip-6pt
+
+which gives (notice the braces in the above lines)
+
+\vskip-6pt
+\startlines
+\getbuffer
+\stoplines
+\vskip-12pt
+
+\section Font sizes
+
+Occasionally one needs to change the font size. \CONTEXT\ provides two series
+of commands for that. To increase the font you can use \type{\tfa} to scale
+the font size by a factor of $1.2$, \type{\tfb} to scale by a factor of
+$(1.2)^2 = 1.44$, \type{\tfc} to scale by $(1.2)^3 = 1.728$ and \type{\tfd} to
+scale by $(1.2)^4 = 2.074$.
+
+To decrease the font size, you can use \type{\tfx}
+to scale the font by a factor of $0.8$ and \type{\tfxx} to scale by a factor
+of $0.6$. The scale factors can be a function of the current font size and can
+be changed by \type{\definebodyfontenvironment}.
+
+For example, if you want
+\type{\tfa} to be equal to 12pt when you are using 10pt font, and be equal to
+14pt when you are using 11pt font, then add
+
+\vskip-4pt
+\starttyping
+\definebodyfontenvironment [10pt] [a=12pt]
+\definebodyfontenvironment [11pt] [a=14pt]
+\stoptyping
+\vskip-4pt
+
+\noindent
+The \type{\definebodyfontenvironment} command is described in detail in 
+the \CONTEXT\ manual and the \filename{font-ini.tex} source file.
+
+Font size can be combined with font styles. As a shortcut, you can use
+\type{\bfa} to get bold font scaled by $1.2$, \type{\bfx} to get a bold font
+scaled by $0.8$ and similar commands for other font styles.
+
+These font size switches are meant for changing the font size of a few
+words: they do not change the interline spacing and math font sizes. So, if
+you want to change the font size of an entire paragraph, use
+\type{\switchtobodyfont} described below in \in Section[setupbodyfont]. However, it
+is fine to use them as style directives in setup commands, that is, using them
+as an option for \type{style=...} in any setup command that accepts the
+\type{style} option.
+
+\section Alternative font styles
+
+While learning a document markup language like \CONTEXT, it can be hard to
+remember all the commands. \CONTEXT\ provides easy to remember alternative
+font styles. So for bold you can use \type{\bold}, for italic you can use
+\type{\italic}, for slanted you can use \type{\slanted}, and so on. You can
+probably guess what the following do:
+\blank[halfline]
+
+\starttable[|l|l|]
+  \NC \type{\normal} 
+  \NC \type{\slanted}
+  \NC \NR
+  \NC \type{\boldslanted}
+  \NC \type{\slantedbold}
+  \NC \NR
+  \NC \type{\bolditalic}
+  \NC \type{\italicbold}
+  \NC \NR
+  \NC \type{\small}
+  \NC \type{\smallnormal}
+  \NC \NR
+  \NC \type{\smallbold}
+  \NC \type{\smallslanted}
+  \NC \NR
+  \NC \type{\smallboldslanted}
+  \NC \type{\smallslantedbold}
+  \NC \NR
+  \NC \type{\smallbolditalic}
+  \NC \type{\smallitalicbold}
+  \NC \NR
+  \NC \type{\sans}
+  \NC \type{\sansserif}
+  \NC \NR
+  \NC \type{\sansbold}
+  \NC \type{\smallcaps} 
+  \NC \NR
+\stoptable
+\blank[halfline]
+
+\noindent
+In addition, the commands \type{\smallbodyfont} and
+\type{\bigbodyfont} can be used to change the font size.
+
+These alternative font styles are pretty smart. You can either use them as
+font style switches inside a group, or as a font changing command that takes an
+argument. For example,
+\startbuffer
+This is {\bold bold} and so is \bold{this}.
+\stopbuffer
+
+\vskip-6pt
+\typebuffer
+\vskip-6pt
+
+gives
+
+\vskip-6pt
+\startlines
+\getbuffer
+\stoplines
+
+These alternative font styles can also be used for all \type{style=...}
+options, and while using them as style options, you can just give the command
+name, for example:
+
+\vskip-6pt
+\starttyping
+\setuphead[section][style=bold] 
+\stoptyping
+
+\column
+\section[setupbodyfont] Complete font change
+
+If you need to change to a different font size and take care of interline
+spacing, you can use \type{\switchtobodyfont}. For example, to switch to 12pt
+you can use \type|\switchtobodyfont[12pt]|.
+
+\CONTEXT\ provides two relative sizes, called `big' and `small'. So, to go to a
+bigger font size, you can use \type|\switchtobodyfont[big]| and to go to a
+smaller font size, \type|\switchtobodyfont[small]|. The exact
+sizes that are used for big and small can be set using
+\type|\definebodyfontenvironment|.
+
+The \type{\setupbodyfont} command accepts all the same arguments as
+\type{\switchtobodyfont}. The difference between the two is that
+\type{\setupbodyfont} also changes the font for headers, footers and other
+page markings, while \type{\switchtobodyfont} does not. So you should use
+\type{\setupbodyfont} for global font definitions to apply to the whole document, and
+\type{\switchtobodyfont} for local font changes. The effect of
+\type{\switchtobodyfont} can be localized within a group as usual.
+
+
+\vskip-3pt
+\section Different typefaces
+
+So far we have discussed style and size changes within a given typeface
+family.  If you want to use a different typeface
+altogether, such as Times or Palatino, the Pragma web site has recipes
+covering all the commonly available typefaces,\footnote{\mystrut {\tt
+\from[existingfonts]}} while a separate manual describes how to write
+support for new typefaces.\footnote{\mystrut {\tt \from[newfonts]}} (For
+the latter, see also Idris Hamid's article in this issue of
+\slanted{TUGboat}.)
+
+%\starttyping
+%\definetypeface [palatino] [rm] [serif] [palatino] [default] [encoding=ec]
+%\switchtotypeface [palatino] [10pt,rm]
+%\stoptyping
+
+\myindent
+The recipes as given work with the standalone \ConTeXt\
+distribution, but not with \TeX\ Live et al.%
+\footnote{\mystrut {\tt \from[tfmetrics]} explains why \CONTEXT\ uses 
+separate font metrics, and gives some differences between the 
+sets.\vrule height0pt width0pt depth.6ex \hfuzz=9pt\baselineskip=10pt\par}
+To use the recipes with other distributions, try adding one of
+\type|\usetypescript[berry][ec]| or \type|\usetypescript[adobekb][ec]|.
+
+\vskip-3pt
+\section Conclusion
+
+There are many other ways of choosing font styles in \CONTEXT.  If these
+basic styles do not satisfy your needs, have a look at the manual
+\note[1], or ask on the \CONTEXT\ mailing list.\footnote{\mystrut
+\hfuzz=6pt {\tt \from[mailing]}\par}
+
+\setlastpage{1}
+
+\StopArticle
+                                     
+\stoptext
