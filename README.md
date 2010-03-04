@@ -14,7 +14,7 @@ Tug 2009
 * [LuaTeX]
 
 [TUGBoat]:http://www.tug.org/tugboat/
-[Font Stlye]:http://www.tug.org/TUGboat/Articles/tb28-2/tb89mahajan.pdf
+[Font Styles]:http://www.tug.org/TUGboat/Articles/tb28-2/tb89mahajan.pdf
 [Table Macros I]:http://www.tug.org/TUGboat/Articles/tb28-3/tb90mahajan.pdf
 [Table Macros II]:http://www.tug.org/TUGboat/Articles/tb29-1/tb91mahajan.pdf
 [Indentation]:http://www.tug.org/TUGboat/Articles/tb29-2/tb92mahajan.pdf
