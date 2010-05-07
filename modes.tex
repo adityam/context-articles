@@ -43,11 +43,11 @@ could use \emph{modes}\Dash the \CONTEXT\ way of doing conditional processing.
 
 \section {Introduction}
 
-A mode is similar to a conditional flag, but with a few advantages. New modes
+A mode is similar to a conditional flag, but with a few advantages: new modes
 need not be explicitly defined (no need for something like \type|\newif|),
-multiple modes can be simultaneously enabled or disabled, the status of multiple
+multiple modes can be simultaneously enabled or disabled, and the status of multiple
 modes can be checked easily. Moreover, modes can be set from a command line
-switch. So, multiple versions of a document can be generated without changing
+switch. As a result, multiple versions of a document can be generated without changing
 the source file.
 
 The name or identifier of a mode can be any combination of letters, digits, or
@@ -64,22 +64,19 @@ active or not.
   \item \type{\disablemode[...]}
   \item \type{\preventmode[...]}
 \stopitemize
-The names are self explanatory. \type{\enablemode} activates a mode,
+The names are self-descriptive. \type{\enablemode} activates a mode,
 \type{\disablemode} deactivates a mode, and \type{\preventmode} permanently
 deactivates a mode. All three commands take a list of modes as an argument. For
-example,  you can  activate \type{screen} and \type{solution} modes by
+example,  you can  activate modes named \type{screen} and \type{solution} with
 \starttyping
     \enablemode[screen,solution]
 \stoptyping
 
 Modes can also be activated by a command line switch \type|-|\type|-modes| to
-\type{texexec} and \type{context}. For example, to activate \type{screen} and
-\type{solution} modes, you can run \CONTEXT\ using
+\type{texexec} or \type{context}. For example, another way to activate the \type{screen} and
+\type{solution} modes, to run \CONTEXT\ using one of:
 \starttyping 
     texexec --mode=screen,solution ...
-\stoptyping
-\noindentation or 
-\starttyping 
     context --mode=screen,solution ...
 \stoptyping
 
