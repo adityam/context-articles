@@ -84,43 +84,44 @@ Modes can also be activated by a command line switch \type|-|\type|-modes| to
 \section {Conditional processing based on modes}
 
 Suppose you want to change the paper size of a document depending on whether it
-is for print or screen. This can be done in multiple ways. You could either set
-a default paper size for print and change it for screen:
+is for print or screen. This can be done in multiple ways. You could set
+the default paper size for print and change it in screen mode:
 \starttyping
   \setuppapersize[letter][letter]
-
   \startmode[screen]
     \setuppapersize[S6][S6]
   \stopmode
 \stoptyping
 \noindentation 
 (S6 is one of the screen-optimized paper sizes in \CONTEXT; the paper size has a
-4:3 aspect ratio and a width equal to the width of A4 paper.) Alternatively, you
-could set a default paper size for screen and change it if the screen mode is
+4:3 aspect ratio and a width equal to the width of A4 paper.)
+
+Alternatively, you
+could set a default paper size for the screen and change it if screen mode is
 not enabled:
 \starttyping
   \setuppapersize[S6][S6]
-
   \startnotmode[screen]
     \setuppapersize[letter][letter]
   \stopnotmode
 \stoptyping
 
-\type|\startmode| and \type|\startnotmode| can check for multiple modes. The
-arguments to \type|\startmode| and \type|\startnotmode| can be a list of modes.
-\type|\startmode| processes its contents (everything until the next
-\type|\stopmode|\footnote{This means that \type|\startmode| cannot be nested.})
-if any of the modes are enabled, otherwise (i.e., when all the modes are
-disabled) \type|\startmode| ignores it contents. \type|\startnotmode| is the
-opposite. It processes its contents (everything until the next
-\type|\stopnotmode| if any of the modes are disabled, otherwise (i.e., when all
-the mods are enabled) \type|\startnotmode| ignores its contents.
+\type|\startmode| and \type|\startnotmode| can check for multiple modes,
+by giving a list of modes as their arguments.  \type|\startmode|
+processes its contents (everything until the next
+\type|\stopmode|\footnote{This means that \type|\startmode| cannot be
+nested.})  if any of the modes are enabled, otherwise (i.e., when all
+the modes are disabled) \type|\startmode| ignores its
+contents. The opposite is \type|\startnotmode|: it processes its
+contents (everything until the next \type|\stopnotmode|) if any of the
+modes are disabled, otherwise\Dash when all the modes are enabled\Dash
+the contents are ignored.
 
-\type|\startmode| and \type|\startnotmode| are \emph{or} environments. They
+\type|\startmode| and \type|\startnotmode| are ``\emph{or}'' environments. They
 process their contents if any of the modes satisfy the required condition. Their
-\emph{and} counterparts are \type|\startallmodes| and \type|\startnotallmodes|,
-which process their contents only if all the modes satisfy the required
-condition. For example, suppose you want to enable interaction (hyperlinks) etc.
+``\emph{and}'' counterparts are also available: \type|\startallmodes| and \type|\startnotallmodes|
+process their contents only if all the given modes satisfy the required
+condition. For example, suppose you want to enable interaction (e.g., hyperlinks)
 only when both \type|screen| and \type|solution| modes are enabled. Then you can
 use:
 \starttyping
@@ -132,24 +133,24 @@ use:
 To summarize, the four start-stop environments for checking modes are:
 \starttyping
 \startmode[mode1, mode2, ...]
-  % Process if one of the modes is enabled
+  % Processed if any of the modes is enabled
 \stopmode
 
 \startnotmode[mode1, mode2, ...]
-  % Process if one of the modes is disabled
+  % Processed if any of the modes is disabled
 \stopnotmode
 
 \startallmodes[mode1, mode2, ...]
-  % Process if all modes are enabled
+  % Processed if all the modes are enabled
 \stopallmodes
 
 \startnotallmodes[mode1, mode2, ...]
-  % Process if all the modes are disabled
+  % Processed if all the modes are disabled
 \stopnotallmodes
 \stoptyping
 
-These environments have a \type|\doif| alternative that are useful for short
-setups and can also be nested.
+These environments have \type|\doif...| alternatives that are useful for short
+setups.  Also, they can be nested.
 
 \starttyping
 \doifmode        {modes} {content}
@@ -158,17 +159,16 @@ setups and can also be nested.
 \doifnotallmodes {modes} {content}
 \stoptyping
 \noindentation 
-The logic for determining when the content is processes is exactly the same as
-for the \type|start|-\type|stop| alternatives.
+The logic for determining when the content is processed is exactly the same as
+for the \type|start|-\type|stop| commands.
 
-These \type|\doif| commands have a variant that can process something else if
+These \type|\doif| commands have variants to process alternative code if
 the conditions are not satisfied (like the \type|\else| branch of \type|\if|).
 \starttyping
-\doifmodeelse    {modes} {content} {alternative}
-\doifnotmodeelse {modes} {content} {alternative}
-\doifallmodeselse{modes} {content} {alternative}
-\doifnotallmodeselse{modes} 
-                         {content} {alternative}
+\doifmodeelse       {modes} {content} {alt}
+\doifnotmodeelse    {modes} {content} {alt}
+\doifallmodeselse   {modes} {content} {alt}
+\doifnotallmodeselse{modes} {content} {alt}
 \stoptyping
 
 \section[sec:system] {System modes} 
