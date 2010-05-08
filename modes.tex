@@ -162,7 +162,7 @@ setups.  Also, they can be nested.
 The logic for determining when the content is processed is exactly the same as
 for the \type|start|-\type|stop| commands.
 
-These \type|\doif| commands have variants to process alternative code if
+These \type|\doif| commands each have a variant to process alternative code if
 the conditions are not satisfied (like the \type|\else| branch of \type|\if|).
 \starttyping
 \doifmodeelse       {modes} {content} {alt}
@@ -173,61 +173,69 @@ the conditions are not satisfied (like the \type|\else| branch of \type|\if|).
 
 \section[sec:system] {System modes} 
 
-In addition to user-defined modes, \CONTEXT\ provides some system modes. These
-modes start with a \type{*}. Here I will only explain the more commonly used
-system modes. You can see the \CONTEXT\ modes manual
-\footnote[modes]{\hyphenatedurl{http://pragma-ade.com/general/manuals/mmodes.pdf}}
-for a complete list of system modes.
+In addition to user-defined modes, \CONTEXT\ provides some system
+modes. These modes start with a \type{*} character. Here I will explain
+only the more commonly used system modes; see the \CONTEXT\ modes
+manual ({\tt
+\hyphenatedurl{http://pragma-ade.com/general/manuals/mmodes.pdf}}) for a
+complete list.
 
 Perhaps the most useful system modes are \type|*mkii| and \type|*mkiv| which
-determine whether \MKII\ or \MKIV is being used. These modes are handy when you
+determine whether \MKII\ or \MKIV\ is being used. These modes are handy when you
 want different setups for \MKII\ and \MKIV.
 
 Other modes are useful for very specific situations. Some of these are described
 below.
 
-A document multiple times to get the cross referencing, table of contents, etc.\
-right. However, sometimes you need to do some external processing (like graphic
-conversion) that only needs to be done only once. In such cases, the
+A document must be run multiple times to get the cross referencing,
+table of contents, etc.\
+right. However, sometimes you need to do some external processing (e.g., graphic
+conversion) that only needs to be done once. In such cases, the
 \type|*first| mode is handy, which checks for the first run of the document. 
 
 You can use the project-product-component structure for managing large projects
 like a book series. See the \CONTEXT\
-wiki\footnote{\hyphenatedurl{http://wiki.contextgarden.net/Project_structure}}
-for details. Both product and components can be compiled separately. 
-Sometimes you want to process a component differently depending on whether it is
-being compiled directly, or if the complete product is being compiled. This can
-be checked using the modes \type|*project|, \type|*product|, \type|*component|,
+wiki article ({\tt \hyphenatedurl{http://wiki.contextgarden.net/Project_structure}})
+for details of this approach. What we consider here is that both a
+product and its components can be compiled on their own, 
+and sometimes you want to process a component differently when it is
+being compiled directly than when it is part of the complete product. This can
+be checked with the modes \type|*project|, \type|*product|, \type|*component|,
 and \type|*environment|. For example, the \type|*product| mode is set whenever a
-product file is read (more specifically, whenever a \type|\startproduct| is
-encountered). Similarly, a mode \type|*text| is enabled whenever a
-\type|\starttext| is encountered. 
+product file is read; more specifically, when \type|\startproduct| is
+encountered. Similarly, a mode \type|*text| is enabled when
+\type|\starttext| is encountered, and likewise for the others.
 
-A large document is also broken down into different section blocks like
+A large document is typically broken down into different section blocks:
 frontmatter, bodymatter, appendices, and backmatter. Internally, these section
-blocks are refered as \type|frontpart|, \type|backpart|, \type|appendix|, and
-\type|backmatter|. Each section block sets a system mode with the same name. So,
-if you want macros that work differently for different section blocks, you can
-check for \type|*fronpart|, \type|*backpart|, \type|*appendix|, and
-\type|*backmatter| modes. 
+blocks are referred to as \type|frontpart|, \type|bodypart|, \type|appendix|, and
+\type|backpart|. Each section block sets a system mode with the same name. So,
+if you want macros that work differently in different section blocks, you can
+check for modes \type|*frontpart|, \type|*bodypart|, and so on.
 
-\CONTEXT\ provides support for multiple language. Language are recognized by
-their IETF language tags, like \type|en-us| for US English, \type|en-gb|
+\CONTEXT\ provides support for multiple languages. Languages are recognized by
+their \acro{IETF} language tags, like \type|en-us| for \acro{US}
+English, \type|en-gb|
 for British English, \type|nl| for Dutch, \type|de| for German, etc. A document
-has a main language set using \type|\mainlanguage[...]| that is sued for
+has a main language, set with the command \type|\mainlanguage[...]|,
+that is used for
 translated labels like \emph{chapter} and \emph{figure}. You can also switch the
 current language using \type|\language[...]| to change the hyphenation rules.
-Whenever a language is chosen, its id is set as mode. The mode for the main
-language starts with two \type{*}. For example, when the main language is US
+Whenever a language is chosen, its identifier is set as a mode. The mode for the main
+language starts with two \type{*}. For example, when the main language
+is \acro{US}
 English and the current language is Dutch, the modes \type|**en-us| and
 \type|*nl| are set (notice the extra \type|*| in \type|**en-us|). 
 
-Other system modes are \type|*figure| which is set when a graphic is found,
-\type|*interaction| which is set when interaction is enabled, \type|*grid| which
-is set when grid typesetting is enabled, and \type|*pdf| and \type|*dvi| which
+Other system modes: \type|*figure| is set when a graphic is found,
+\type|*interaction| is set when interaction is enabled, \type|*grid|
+is set when grid typesetting is enabled, and \type|*pdf| and \type|*dvi| 
 are set depending on the whether we are generating \PDF\ or \DVI\ output. Others
-are too esoteric to desribe here. If you are interested, see the 
-modes manual\note[modes].
+are too esoteric to describe here. If you are interested, see the 
+modes manual mentioned earlier.
+
+In summary, \ConTeXt\ modes provide generalized conditional processing.
+A rich set of built-in modes is available.
 
 \StopArticle
 \stoptext
