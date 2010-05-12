@@ -32,7 +32,7 @@ ConTeXt has three commands for setting modes:
 * <code><cmd>preventmode</cmd>[...]</code>
 
 The names are self-descriptive. <cmd>enablemode</cmd> activates a mode,
-<cmd>disablemode<cmd> deactivates a mode, and <cmd>preventmode<cmd> permanently
+<cmd>disablemode</cmd> deactivates a mode, and <cmd>preventmode</cmd> permanently
 deactivates a mode. All three commands take a list of modes as an argument. For
 example,  you can  activate modes named <code>screen</code> and <code>solution</code> with
 <texcode>
