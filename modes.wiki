@@ -1,0 +1,249 @@
+﻿< [[The ConTeXt Way]] | [[Inside ConTeXt]] | [[Project structure]] >
+
+Very often, you want to generate multiple versions of the same document:
+one version for printing and one for viewing on the screen, one version for
+students and one version for the instructor, and so on. You can do this in a
+simple but naive way: create different files set up for the different versions and
+<code>\input</code> the common material, or create some new conditional flags using
+<code>\newif</code> and set them appropriately for conditional processing. Or you
+could use <em>modes</em>&mdash;the ConTeXt way of doing conditional processing.
+
+= Introduction =
+
+A mode is similar to a conditional flag, but with a few advantages: new modes
+need not be explicitly defined (no need for something like <code>\newif</code>),
+multiple modes can be simultaneously enabled or disabled, and the status of multiple
+modes can be checked easily. Moreover, modes can be set from a command line
+switch. As a result, multiple versions of a document can be generated without changing
+the source file.
+
+The name or identifier of a mode can be any combination of letters, digits, or
+spaces. Names starting with <code>*</code> are reserved for system modes. 
+
+In this article I explain how to activate a mode and how to check if a mode is
+active or not. 
+
+= Setting modes =
+
+ConTeXt has three commands for setting modes:
+
+* <code><cmd>enablemode </cmd>[...]</code>
+* <code><cmd>disablemode</cmd>[...]</code>
+* <code><cmd>preventmode</cmd>[...]</code>
+
+The names are self-descriptive. <cmd>enablemode</cmd> activates a mode,
+<cmd>disablemode<cmd> deactivates a mode, and <cmd>preventmode<cmd> permanently
+deactivates a mode. All three commands take a list of modes as an argument. For
+example,  you can  activate modes named <code>screen</code> and <code>solution</code> with
+<texcode>
+    \enablemode[screen,solution]
+</texcode>
+
+Modes can also be activated by a command line switch <code>--modes</code> to
+<code>texexec</code> or <code>context</code>. For example, another way to activate the <code>screen</code> and
+<code>solution</code> modes, to run ConTeXt using one of:
+
+    texexec --mode=screen,solution ...
+    context --mode=screen,solution ...
+
+
+
+= Conditional processing based on modes =
+
+You may want to process or ignore a chunk of code if a particular mode is enabled
+or disabled. Such a chunk of code is specified using <code>\startmode</code> and
+<code>\startnotmode</code> environments. Their usable is best explained by an example.
+
+Suppose you want to change the paper size of a document depending on whether it
+is for print or screen. This can be done in multiple ways. You could set
+the default paper size for print and change it in screen mode:
+<texcode>
+  \setuppapersize[letter][letter]
+  \startmode[screen]
+    \setuppapersize[S6][S6]
+  \stopmode
+</texcode>
+(S6 is one of the screen-optimized paper sizes in ConTeXt; the paper size has a
+4:3 aspect ratio and a width equal to the width of A4 paper.)
+
+Alternatively, you
+could set a default paper size for the screen and change it if screen mode is
+not enabled:
+<texcode>
+  \setuppapersize[S6][S6]
+  \startnotmode[screen]
+    \setuppapersize[letter][letter]
+  \stopnotmode
+</texcode>
+
+<code>\startmode</code> and <code>\startnotmode</code> can check for multiple modes,
+by giving a list of modes as their arguments.  <code>\startmode</code>
+processes its contents (everything until the next
+<code>\stopmode</code>, thus <code>\startmode</code> cannot be
+nested.)  if any of the modes are enabled, otherwise (i.e., when all
+the modes are disabled) <code>\startmode</code> ignores its
+contents. The opposite is <code>\startnotmode</code>: it processes its
+contents (everything until the next <code>\stopnotmode</code>) if any of the
+modes are disabled, otherwise&mdash;when all the modes are enabled&mdash;the contents are ignored.
+
+<code>\startmode</code> and <code>\startnotmode</code> are "<em>or</em>" environments. They
+process their contents if any of the modes satisfy the required condition. Their
+"<em>and</em>" counterparts are also available: <code>\startallmodes</code> and <code>\startnotallmodes</code>
+process their contents only if all the given modes satisfy the required
+condition. For example, suppose you want to enable interaction (e.g., hyperlinks)
+only when both <code>screen</code> and <code>solution</code> modes are enabled. Then you can
+use:
+<texcode>
+  \startallmodes[screen,solution]
+    \setupinteraction[state=start]
+  \stopallmodes
+</texcode>
+
+To summarize, the four start-stop environments for checking modes are:
+<texcode>
+\startmode[mode1, mode2, ...]
+  % Processed if any of the modes is enabled
+\stopmode
+
+\startnotmode[mode1, mode2, ...]
+  % Processed if any of the modes is disabled
+\stopnotmode
+
+\startallmodes[mode1, mode2, ...]
+  % Processed if all the modes are enabled
+\stopallmodes
+
+\startnotallmodes[mode1, mode2, ...]
+  % Processed if all the modes are disabled
+\stopnotallmodes
+</texcode>
+
+These environments have <code>\doif...</code> alternatives that are useful for short
+setups.  Also, they can be nested.
+
+<texcode>
+\doifmode        {modes} {content}
+\doifnotmode     {modes} {content}
+\doifallmodes    {modes} {content}
+\doifnotallmodes {modes} {content}
+</texcode>
+The logic for determining when the content is processed is exactly the same as
+for the <code>start</code>-<code>stop</code> commands.
+
+These <code>\doif</code> commands each have a variant to process alternative code if
+the conditions are not satisfied (like the <code>\else</code> branch of <code>\if</code>).
+<texcode>
+\doifmodeelse       {modes} {content} {alt}
+\doifnotmodeelse    {modes} {content} {alt}
+\doifallmodeselse   {modes} {content} {alt}
+\doifnotallmodeselse{modes} {content} {alt}
+</texcode>
+
+= System modes =
+
+Besides allowing user-definable modes, ConTeXt provides some system
+modes. These modes start with a <code>*</code> character. Here I will explain
+only the more commonly used system modes; see the ConTeXt [[http://pragma-ade.com/general/manuals/mmodes.pdf modes manual]]
+for a complete list.
+
+Perhaps the most useful system modes are <code>*mkii</code> and <code>*mkiv</code> which
+determine whether MKII or MKIV is being used. These modes are handy when you
+want different setups for MKII and MKIV.
+
+Other modes are useful for very specific situations. Some of these are described
+below.
+
+A document must be run multiple times to get the cross referencing,
+table of contents, etc.
+right. However, sometimes you need to do some external processing (e.g., graphic
+conversion) that only needs to be done once. In such cases, the
+<code>*first</code> mode is handy&mdash;it is active only on the first run of the
+document.
+
+You can use the project-product-component structure for managing large projects
+like a book series. See the [Project structure]
+for details of this approach. A product or its components may be compiled
+separately, and you may want to do something different when a product is
+compiled or when a component is compiled. To do so, you need to check for
+modes <code>*project</code>, <code>*product</code>, <code>*component</code>, and
+<code>*environment</code>; these modes are set when the corresponding structure file
+is processed. For example, the <code>*product</code> mode is set whenever a
+product file is read; more specifically, when <code>\startproduct</code> is
+encountered. Similarly, a mode <code>*text</code> is enabled when
+<code>\starttext</code> is encountered, and likewise for the others.
+
+A large document is typically broken down into different section blocks:
+frontmatter, bodymatter, appendices, and backmatter. Internally, these section
+blocks are referred to as <code>frontpart</code>, <code>bodypart</code>, <code>appendix</code>, and
+<code>backpart</code>. Each section block sets a system mode with the same name. So,
+if you want macros that work differently in different section blocks, you can
+check for modes <code>*frontpart</code>, <code>*bodypart</code>, and so on.
+
+ConTeXt provides support for multiple languages. Languages are recognized by
+their IETF language tags, like <code>en-us</code> for US
+English, <code>en-gb</code>
+for British English, <code>nl</code> for Dutch, <code>de</code> for German, etc. A document
+has a main language, set with the command <code>\mainlanguage[...]</code>,
+that is used for
+translated labels like <em>chapter</em> and <em>figure</em>. You can also switch the
+current language using <code>\language[...]</code> to change the hyphenation rules.
+Whenever a language is chosen, its identifier is set as a mode. The mode for the main
+language starts with two <code>*</code>. For example, when the main language
+is US
+English and the current language is Dutch, the modes <code>**en-us</code> and
+<code>*nl</code> are set (notice the extra <code>*</code> in <code>**en-us</code>). 
+
+Other system modes: <code>*figure</code> is set when a graphic is found,
+<code>*interaction</code> is set when interaction is enabled, <code>*grid</code>
+is set when grid typesetting is enabled, and <code>*pdf</code> and <code>*dvi</code> 
+are set when the output is PDF or DVI. Others
+are too esoteric to describe here. If you are interested, see the 
+modes manual mentioned earlier.
+
+= Specific Examples =
+
+== Different fonts ==
+
+Suppose you want to generate two versions of a document, one with times font and one with palatino. One way to do this is as follows:
+
+<texcode>
+\startmode[palatino]
+   \usetypescript[palatino][8r]
+   \setupbodyfont[palatino,12pt]
+\stopmode
+
+\startmode[times]
+   \usetypescript[postscript][8r]
+   \setupbodyfont[postscript,12pt]
+\stopmode
+
+\starttext
+\input knuth
+\stoptext
+</texcode>
+and run with one of the following:
+
+	texexec --mode=palatino filename
+	texexec --mode=times    filename
+
+== Running external commands once ==
+
+Suppose you want to run some external program, say to generate a figure. Unfortunately, the program only generates postscript figure. So you want to convert it to pdf. This can be done as follows:
+<texcode>
+\startmode[*first]
+   % external program which creates a file fig-1.ps
+   \executesystemcommand{some_external_program ...}
+   % convert PS into PDF
+   \executesystemcommand{texmfstart pstopdf fig-1.ps}
+\stopmode
+
+% include the resulting PDF
+\externalfigure[fig-1]
+</texcode>
+
+= Summary =
+
+In summary, modes provide generalized conditional processing. A rich set of
+built-in modes is available.
+
+[[Category:ConTeXt programming]]
