@@ -4,6 +4,12 @@
 \setupbodyfontenvironment[default][em=italic]
 % I prefer emphasized text to be italic rather than slanted
 
+% ConTeXt uses some weird rules for breaking urls. A small attempt to sanitize
+% that
+
+\sethyphenatedurlafter /
+\sethyphenatedurlafter .
+
 \setvariables
   [tugboat]
   [type=article,
