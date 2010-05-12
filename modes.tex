@@ -197,12 +197,12 @@ document.
 You can use the project-product-component structure for managing large projects
 like a book series. See the \CONTEXT\
 wiki article ({\tt \hyphenatedurl{http://wiki.contextgarden.net/Project_structure}})
-for details of this approach. What we consider here is that both a
-product and its components can be compiled on their own, 
-and sometimes you want to process a component differently when it is
-being compiled directly than when it is part of the complete product. This can
-be checked with the modes \type|*project|, \type|*product|, \type|*component|,
-and \type|*environment|. For example, the \type|*product| mode is set whenever a
+for details of this approach. A product or its components may be compiled
+separately, and you may want to do something different when a product is
+compiled or when a component is compiled. To do so, you need to check for
+modes \type|*project|, \type|*product|, \type|*component|, and
+\type|*environment|; these modes are set when the corresponding structure file
+is processed. For example, the \type|*product| mode is set whenever a
 product file is read; more specifically, when \type|\startproduct| is
 encountered. Similarly, a mode \type|*text| is enabled when
 \type|\starttext| is encountered, and likewise for the others.
