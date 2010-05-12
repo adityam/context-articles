@@ -143,7 +143,7 @@ the conditions are not satisfied (like the <code>\else</code> branch of <code>\i
 
 Besides allowing user-definable modes, ConTeXt provides some system
 modes. These modes start with a <code>*</code> character. Here I will explain
-only the more commonly used system modes; see the ConTeXt [[http://pragma-ade.com/general/manuals/mmodes.pdf modes manual]]
+only the more commonly used system modes; see the ConTeXt [http://pragma-ade.com/general/manuals/mmodes.pdf modes manual]
 for a complete list.
 
 Perhaps the most useful system modes are <code>*mkii</code> and <code>*mkiv</code> which
@@ -161,7 +161,7 @@ conversion) that only needs to be done once. In such cases, the
 document.
 
 You can use the project-product-component structure for managing large projects
-like a book series. See the [Project structure]
+like a book series. See [[Project structure]]
 for details of this approach. A product or its components may be compiled
 separately, and you may want to do something different when a product is
 compiled or when a component is compiled. To do so, you need to check for
