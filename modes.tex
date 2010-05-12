@@ -83,6 +83,10 @@ Modes can also be activated by a command line switch \type|-|\type|-modes| to
 
 \section {Conditional processing based on modes}
 
+You may want to process or ignore a chunk of code if a particular mode is enabled
+or disabled. Such a chunk of code is specified using \type|\startmode| and
+\type|\startnotmode| environments. Their usable is best explained by an example.
+
 Suppose you want to change the paper size of a document depending on whether it
 is for print or screen. This can be done in multiple ways. You could set
 the default paper size for print and change it in screen mode:
