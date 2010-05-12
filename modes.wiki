@@ -36,15 +36,15 @@ The names are self-descriptive. <cmd>enablemode</cmd> activates a mode,
 deactivates a mode. All three commands take a list of modes as an argument. For
 example,  you can  activate modes named <code>screen</code> and <code>solution</code> with
 <texcode>
-    \enablemode[screen,solution]
+\enablemode[screen,solution]
 </texcode>
 
 Modes can also be activated by a command line switch <code>--modes</code> to
 <code>texexec</code> or <code>context</code>. For example, another way to activate the <code>screen</code> and
 <code>solution</code> modes, to run ConTeXt using one of:
 
-    texexec --mode=screen,solution ...
-    context --mode=screen,solution ...
+  texexec --mode=screen,solution ...
+  context --mode=screen,solution ...
 
 
 
@@ -58,10 +58,10 @@ Suppose you want to change the paper size of a document depending on whether it
 is for print or screen. This can be done in multiple ways. You could set
 the default paper size for print and change it in screen mode:
 <texcode>
-  \setuppapersize[letter][letter]
-  \startmode[screen]
-    \setuppapersize[S6][S6]
-  \stopmode
+\setuppapersize[letter][letter]
+\startmode[screen]
+  \setuppapersize[S6][S6]
+\stopmode
 </texcode>
 (S6 is one of the screen-optimized paper sizes in ConTeXt; the paper size has a
 4:3 aspect ratio and a width equal to the width of A4 paper.)
@@ -70,10 +70,10 @@ Alternatively, you
 could set a default paper size for the screen and change it if screen mode is
 not enabled:
 <texcode>
-  \setuppapersize[S6][S6]
-  \startnotmode[screen]
-    \setuppapersize[letter][letter]
-  \stopnotmode
+\setuppapersize[S6][S6]
+\startnotmode[screen]
+  \setuppapersize[letter][letter]
+\stopnotmode
 </texcode>
 
 <code>\startmode</code> and <code>\startnotmode</code> can check for multiple modes,
@@ -94,9 +94,9 @@ condition. For example, suppose you want to enable interaction (e.g., hyperlinks
 only when both <code>screen</code> and <code>solution</code> modes are enabled. Then you can
 use:
 <texcode>
-  \startallmodes[screen,solution]
-    \setupinteraction[state=start]
-  \stopallmodes
+\startallmodes[screen,solution]
+  \setupinteraction[state=start]
+\stopallmodes
 </texcode>
 
 To summarize, the four start-stop environments for checking modes are:
@@ -223,8 +223,8 @@ Suppose you want to generate two versions of a document, one with times font and
 </texcode>
 and run with one of the following:
 
-	texexec --mode=palatino filename
-	texexec --mode=times    filename
+  texexec --mode=palatino filename
+  texexec --mode=times    filename
 
 == Running external commands once ==
 
