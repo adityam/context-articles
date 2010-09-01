@@ -1,7 +1,7 @@
 Articles written for [TUGBoat]
 
 ConTeXt Macros for users
-===============
+=========================
 
 * [Font Styles]
 * [Table Macros I]
@@ -9,7 +9,7 @@ ConTeXt Macros for users
 * [Indentation]
 
 Tug 2009
-======
+========
 
 * [Opentype Math]
 * [LuaTeX]
