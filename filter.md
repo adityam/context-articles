@@ -17,7 +17,7 @@ why some users still use MkII). I, being no wizard myself, found an existing
 tool that does the job---pandoc. But how could I use pandoc inside ConTeXt?
 
 As for almost everything else in ConTeXt, Hans had already done this; albeit for
-a different toll---the R programming language. Based on a user request, the _R
+a different tool---the R programming language.  The _R
 module_ (`m-r.tex`) allows the user to execute snippets of R code. I wanted the
 same for Markdown.
 
@@ -70,3 +70,45 @@ in your `texmf.cnf` file. See this page
 [http://wiki.contextgarden.net/write18](http://wiki.contextgarden.net/write18)
 on the ConTeXt wiki for detailed instructions.
 
+Basic Usage
+-----------
+
+The steps involved in calling a filter on the contents of an evironment are:
+
+1. Wite the contents to an external file. This file is the input to the filter,
+   and is, therefore, called `\externalfilterinputfile`
+
+2. Run the filter on `\externalfilterinputfile` to generate an output, which is
+   called `\externalfilteroutputfile`.
+
+3. (Optional) Read `\externalfilteroutputfile` in ConTeXt.
+
+Lets start from the simplest case: a filter that inputs a text file and outputs
+a valid ConTeXt file, like `pandoc` to convert from Markdown to ConTeXt. The
+command line syntax of this filter is
+
+    pandoc -t context -o outputfile inputfile
+
+Using this filter from within ConTeXt is pretty simple:
+
+    \usemodule[filter]
+
+    \defineexternalfilter
+        [markdown]
+        [filtercommand={pandoc -t context -o \externalfilteroutputfile \externafilterinputfile}]
+
+Yes, its that easy! This defines an environment
+
+    \startmarkdown
+      ...
+    \stopmarkdown
+
+and a macro
+
+    \processmarkdownfile[...]
+
+The contents of the environment are processed by `pandoc` and the output is
+included back in ConTeXt.
+
+The argument to the macro is a filename, which is processed by `pandoc` and the
+output is included back in ConTeXt.
