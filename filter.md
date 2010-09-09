@@ -75,7 +75,7 @@ Basic Usage
 
 The steps involved in calling a filter on the contents of an evironment are:
 
-1. Wite the contents to an external file. This file is the input to the filter,
+1. Write the contents to an external file. This file is the input to the filter,
    and is, therefore, called `\externalfilterinputfile`
 
 2. Run the filter on `\externalfilterinputfile` to generate an output, which is
@@ -115,3 +115,32 @@ included back in ConTeXt.
 
 The argument to the macro is a filename, which is processed by `pandoc` and the
 output is included back in ConTeXt.
+
+Dealing with slow filters
+-------------------------
+
+The above definition of a markdown filter creates two additional files: an
+\quotation{input} file and an \quotation{output} file, *irrespective of the
+number of times the environment is called*. For each markdown environment,
+ConTeXt overwrites the input file and pandoc overwrites the output file. This is
+the default behavior as I do not want to clutter the current directory with
+temporary files. The trade off is that for each document run, the filter is
+invoked as many times as the number of markdown environments. Since getting
+cross-referencing right normally takes two or three runs, effectively the filter
+is run two or three times more than required. Usually, the filter is fairly
+fast these extra runs are not noticeable. But some filters can be slow. For
+example, just started and exiting the R program takes 0.3 seconds. In such
+cases, the additional runs start adding up. A better trade off is to store the
+contents of each environment in a separate file and invoke the filter only if
+the file *changes in between successive runes*.
+
+The second behavior is achieved by adding `continue=yes` option to the
+definition:
+
+    \defineexternalfilter
+        [...]
+        [filtercommand={...},
+         continue=yes]
+
+
+
