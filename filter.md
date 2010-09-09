@@ -95,9 +95,12 @@ Using this filter from within ConTeXt is pretty simple:
 
     \defineexternalfilter
         [markdown]
-        [filtercommand={pandoc -t context -o \externalfilteroutputfile \externafilterinputfile}]
+        [filtercommand={pandoc -t context -o \externalfilteroutputfile\space \externafilterinputfile}]
 
-Yes, its that easy! This defines an environment
+Yes, its that easy! The only thing to note is that TeX macros gobble spaces, so
+we have to manually insert a space after `\externalfilteroutputfile`.
+
+This defines an environment
 
     \startmarkdown
       ...
