@@ -1,0 +1,66 @@
+Introduction
+============
+
+The basics
+===========
+
+Paper size
+----------
+
+Plain \TEX{} and \LATEX{} were primarily developed in the US. So, they default to
+letter paper, which is the standard paper size in the US. \CONTEXT{} was developed
+in the Netherlands. So, it defaults to A4 paper, which is the
+standard paper size in Europe (and almost everywhere else in the world).
+
+Changing paper size is easy. To get letter paper, use[^syntax]:
+
+    \setuppapersize[letter]
+
+Similarly, to get A4 paper, use:
+
+    \setuppapersize[A4]
+
+[^syntax]: The syntax used here only works with ConTeXt versions newer than
+February 2011. In earlier versions, you had to use
+
+        \setuppapersize[letter][letter]
+
+    to get letter sized paper. You may wonder why we need to repeat the paper size
+    twice. In most cases, these are the same. You only need to use different
+    arguments if you want to print on a bigger paper and trim it later (see
+    Section 5 for details).
+
+Both `A4` and `letter` are predefined paper sizes. \CONTEXT{} also predefines
+many commonly used paper sizes. These include:
+
+- `letter`, `ledger`, `tabloid`, `legal`, `folio`, and `executive` sizes from
+  the North American paper standard;
+
+- sizes `A0` -- `A10`, `B0` -- `B10`, and `C0` -- `C10` from the A, B, and C
+  series of the ISO-216 standard; 
+
+- sizes `RA0` -- `RA4` and `SRA0` -- `SRA4` from the RA and SRA series of
+  ISO-217 paper standard;
+
+- sizes `C6/C5`, `DL`, and `E4` from ISO-269 standard envelope sizes;
+
+- `envelope 9` -- `envelope 14` sizes from the American postal standard;
+
+- sizes `G5` and `E5` from the Swedish SIS-014711 standard. These are used for
+  Swedish theses; 
+
+- size `CD` for CD covers;
+
+- size `S3` -- `S6`, `S8`, `SM`, and `SW` for screen sizes. These sizes are
+  useful for presentations. `S3` -- `S6` and `S8` have an aspect ratio of
+  $4\colon 3$. `S3` is 300pt wide, `S4` is 400pt wide, and so on. `S6` is almost
+  as wide as a `A4` paper. `SM` and `SW` are for medium and wide screens; they
+  have the same height as `S6`;
+
+- a few more paper sizes, which I will not mention here. See
+  `page-lay.mki(i|v)` for details.
+
+Orientation
+-----------
+
+
