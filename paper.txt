@@ -28,7 +28,7 @@ February 2011. In earlier versions, you had to use
     to get letter sized paper. You may wonder why we need to repeat the paper size
     twice. In most cases, these are the same. You only need to use different
     arguments if you want to print on a bigger paper and trim it later (see
-    Section 5 for details).
+    the section on print size for details).
 
 Both `A4` and `letter` are predefined paper sizes. \CONTEXT{} also predefines
 many commonly used paper sizes. These include:
@@ -60,7 +60,37 @@ many commonly used paper sizes. These include:
 - a few more paper sizes, which I will not mention here. See
   `page-lay.mki(i|v)` for details.
 
-Orientation
------------
+Definition new paper sizes
+---------------------------
 
+The predefined paper sizes in \CONTEXT{} cannot fit all needs. To define a new
+paper size, use 
 
+    \definepapersize[exotic]
+                    [width=50mm, height=100mm]
+
+This defines a paper size called _exotic_ that is 50mm wide and 100mm high.
+Instead of _exotic_, any other word could have been used as a name. This new
+paper size can now be used as any of the predefined paper sizes (In fact, all
+predefined paper sizes are defined using `\definepapersize`). Thus, to set the
+paper size to 50mm x 100mm paper, use
+
+    \setuppapersize[exotic]
+
+Orientation and rotation
+------------------------
+
+Most of the popular paper sizes default to a potrait orientation. To get
+landscape orientation, use
+
+    \setuppapersize[letter,landscape]
+
+To rotate the paper by 90 degrees, use
+
+    \setuppapersize[letter,rotated]
+
+To rotate the paper by other multiples of 90 degrees, use
+
+    \setuppapersize[letter,90]
+    \setuppapersize[letter,180]
+    \setuppapersize[letter,270]
