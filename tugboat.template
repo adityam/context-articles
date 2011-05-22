@@ -1,0 +1,38 @@
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+% I prefer emphasized text to be italic rather than slanted
+\setupbodyfontenvironment[default][em=italic]
+
+% ConTeXt uses some weird rules for breaking urls. A small attempt to sanitize
+% that
+
+\sethyphenatedurlafter /
+\sethyphenatedurlafter .
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+%\setvariables
+%   [tugboat]
+%   [year=\tubyear,
+%    volume=\tubvol,
+%    number=\tubnum,
+%    page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: $title$},
+     author={$author$},
+    address={},
+      email={$date$},
+  ]
+
+\starttext
+\StartArticle
+$body$
+\StopArticle
+\stoptext
