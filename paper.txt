@@ -212,7 +212,7 @@ final proofs. For that, use the following:
     \definepapersize[regular][A4][A4]
     \definepapersize[proof]  [A4][A3]
 
-You can then combine these paper sizes with modes[^mode]:
+You can then combine these paper sizes with modes[^modes]:
 
     \setuppapersize[regular]
     \doifmode{proof}{\setuppapersize[proof]}
