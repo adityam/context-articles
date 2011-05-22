@@ -1,5 +1,6 @@
-% ConTeXt basics for users: Paper setup
-% Aditya Mahajan <adityam@ieee.edu>
+% Paper setup
+% Aditya Mahajan 
+% adityam (at) ieee (dot) org
 
 Basic setup
 ===========
@@ -188,10 +189,15 @@ To get crop marks (also called cut marks) use
 
     \setuplayout[marking=on]
 
+By default, the page numbers are also included with the crop marks.
 To get additional information like job name, current date and time along with
 the crop marks, use
 
     \setuplayout[marking=text]
+
+If you want just the crop marks, and no other text, use
+
+    \setuplayout[marking=empty]
 
 
 Defining page and print size combinations
