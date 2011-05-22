@@ -1,11 +1,11 @@
-Introduction
-============
+% ConTeXt basics for users: Paper setup
+% Aditya Mahajan <adityam@ieee.edu>
 
-The basics
+Basic setup
 ===========
 
-Paper size
-----------
+Setting paper size
+------------------
 
 Plain \TEX{} and \LATEX{} were primarily developed in the US. So, they default to
 letter paper, which is the standard paper size in the US. \CONTEXT{} was developed
@@ -20,7 +20,7 @@ Similarly, to get A4 paper, use:
 
     \setuppapersize[A4]
 
-[^syntax]: The syntax used here only works with ConTeXt versions newer than
+[^syntax]: The syntax used here only works with \CONTEXT{} versions newer than
 February 2011. In earlier versions, you had to use
 
         \setuppapersize[letter][letter]
@@ -29,6 +29,9 @@ February 2011. In earlier versions, you had to use
     twice. In most cases, these are the same. You only need to use different
     arguments if you want to print on a bigger paper and trim it later (see
     the section on print size for details).
+
+Pre-defined paper sizes
+-----------------------
 
 Both `A4` and `letter` are predefined paper sizes. \CONTEXT{} also predefines
 many commonly used paper sizes. These include:
@@ -53,15 +56,15 @@ many commonly used paper sizes. These include:
 
 - size `S3` -- `S6`, `S8`, `SM`, and `SW` for screen sizes. These sizes are
   useful for presentations. `S3` -- `S6` and `S8` have an aspect ratio of
-  $4\colon 3$. `S3` is 300pt wide, `S4` is 400pt wide, and so on. `S6` is almost
+  $4:3$. `S3` is 300pt wide, `S4` is 400pt wide, and so on. `S6` is almost
   as wide as a `A4` paper. `SM` and `SW` are for medium and wide screens; they
   have the same height as `S6`;
 
 - a few more paper sizes, which I will not mention here. See
   `page-lay.mki(i|v)` for details.
 
-Definition new paper sizes
----------------------------
+Defining new paper sizes
+-------------------------
 
 The predefined paper sizes in \CONTEXT{} cannot fit all needs. To define a new
 paper size, use 
@@ -69,28 +72,160 @@ paper size, use
     \definepapersize[exotic]
                     [width=50mm, height=100mm]
 
-This defines a paper size called _exotic_ that is 50mm wide and 100mm high.
-Instead of _exotic_, any other word could have been used as a name. This new
-paper size can now be used as any of the predefined paper sizes (In fact, all
-predefined paper sizes are defined using `\definepapersize`). Thus, to set the
-paper size to 50mm x 100mm paper, use
+which defines a paper that is 50mm wide and 100mm high; the name of this paper
+is _exotic_ (we could have used any other word). All predefined paper sizes are
+defined using `\definepapersize`. For example, `A4` paper is defined as:
+
+    \definepapersize [A4]  [width=210mm,height=297mm]
+    
+Use this new paper size as any of the predefined paper sizes. For example, to
+set the paper size to 50mm x 100mm paper, use
 
     \setuppapersize[exotic]
 
-Orientation and rotation
-------------------------
+Orientation 
+-----------
 
-Most of the popular paper sizes default to a potrait orientation. To get
+Most of the popular paper sizes default to a portrait orientation. To get
 landscape orientation, use
 
     \setuppapersize[letter,landscape]
 
-To rotate the paper by 90 degrees, use
+Changing paper setup mid-document
+=======================================
 
-    \setuppapersize[letter,rotated]
+Normally, the paper size is set up once---in the environment file---and doesn't
+need to changed later. But, occasionally, changing paper size mid-document is
+needed; for example, to insert a table or a figure in landscape mode.
+There are two ways to change the paper size mid-document.
+To illustrate those, let us first define two paper sizes for convenience:
 
-To rotate the paper by other multiples of 90 degrees, use
+    \setuppapersize[main] [A4]
+    \setuppapersize[extra][A4,landscape]
 
-    \setuppapersize[letter,90]
-    \setuppapersize[letter,180]
-    \setuppapersize[letter,270]
+One way to change document size is to permanently change the paper size using
+`\setuppapersize` and then revert back using `\setuppapersize`.
+
+    % Set the default paper size
+    \setuppapersize[main]
+
+    \starttext
+
+    % ...
+    % text with main paper size
+    % ...
+
+    \page \setuppapersize[extra]
+
+    % ...
+    % pages in landscape mode
+    % ...
+
+    \page \setuppapersize[main]
+
+    % ...
+    % back to main paper size
+    % ...
+
+    \stoptext
+
+The `\page` before `\setuppapersize` is necessary as `\setuppapersize` changes
+the size of the current page. 
+
+Often times, a different paper size is needed only for one page. Rather than
+manually switching the paper size back and forth using `\setuppapersize`, an
+alternative is to use `\adaptpapersize` that automatically reverts back to the
+existing paper size after _one_ page. This is illustrated by the following
+example.
+
+    \setuppapersize[main]
+    \starttext
+    Page 1. Potrait \page
+    Page 2. Potrait \page
+    \adaptpapersize[extra]
+    Page 3. Landscape \page
+    Page 4. Potrait \page
+    \stoptext
+
+As with `\setuppapersize`, always use an explicit `\page` before
+`\adaptpapersize`. 
+
+Setting print size
+==================
+
+Occasionally you may want to print on a larger paper than the actual page size.
+This could be because you want to print until the edge of the page---so you
+print on a large paper and crop later---or because the page size that you are
+using is not standard. For example, suppose you want to print an `A5` page on a
+`A4` paper (and crop later). For that, you need to specify that the paper size
+is `A5` but the _print paper_ size is `A4`. This information is specified using
+the two argument version of the `\setuppapersize` command:
+
+    \setuppapersize[A5][A4]
+
+Changing page location
+----------------------
+
+By default, this places the `A5` page on the top left corner of the `A4` paper.
+To place the `A5` page in the middle of the `A4` paper use:
+
+    \setuppapersize[A5][A4]
+    \setuplayout[location={middle,middle}]
+
+Other possible values for `location` are: `{top,left}`, `{top,middle}`,
+`{top,right}`, `{middle,right}`, `{middle,left}`, `{bottom,left}`,
+`{bottom,middle}`, and `{bottom,right}`. Since `{middle, middle}` is the most
+commonly used value, it has a shortcut---`location=middle`. 
+
+If you use `{*,left}` or `{*,right}` and print double-sided, then also add
+`duplex` as an option; for example `location={duplex,top,left}`. This ensures
+that the page paper is moved appropriately on even pages. 
+
+Crop marks
+---------
+
+To get crop marks (also called cut marks) use
+
+    \setuplayout[marking=on]
+
+To get additional information like job name, current date and time along with
+the crop marks, use
+
+    \setuplayout[marking=text]
+
+
+Defining page and print size combinations
+-----------------------------------------
+
+It is convenient to define paper-size print-paper-size combination for later
+reuse. These are also defined using `\definepapersize`. For example, suppose you
+want to define two paper-size print-paper-size combinations: `A4` paper on `A4`
+print paper for normal work flow, and `A4` paper on `A3` print paper for the
+final proofs. For that, use the following:
+
+    \definepapersize[regular][A4][A4]
+    \definepapersize[proof]  [A4][A3]
+
+You can then combine these paper sizes with modes[^mode]:
+
+    \setuppapersize[regular]
+    \doifmode{proof}{\setuppapersize[proof]}
+
+[^modes]: See the previous article on _Conditional Processing_ in this series,
+a slightly modified version of which is available on the ConTeXt wiki
+<http://contextgarden.net/Modes>
+
+Then, when you compile the document in the normal manner, you will get `A4`
+paper on `A4` print paper; if you compile the document with `--mode=proof`, then
+you will get a `A4` paper on `A3` print paper. 
+
+Conclusion
+==========
+
+Paper setup is one of the most basic requirements for creating your own
+style. In this article, I explained the basics of paper setup, deliberately
+leaving out more advanced setups that are described in the _Page Design_
+chapter[^page] of the new ConTeXt manual.
+
+[^page]: <http://context.aanhet.net/svn/contextman/context-reference/en/co-pagedesign.pdf>
+
