@@ -13,7 +13,7 @@ letter paper, which is the standard paper size in the US. \CONTEXT{} was develop
 in the Netherlands. So, it defaults to A4 paper, which is the
 standard paper size in Europe (and almost everywhere else in the world).
 
-Changing paper size is easy. To get letter paper, use[^syntax]:
+Changing paper size is easy. for letter size use:[^syntax]
 
     \setuppapersize[letter]
 
@@ -22,7 +22,7 @@ Similarly, to get A4 paper, use:
     \setuppapersize[A4]
 
 [^syntax]: The syntax used here only works with \CONTEXT{} versions newer than
-February 2011. In earlier versions, you had to use
+February 2011. Before that, you had to use
 
         \setuppapersize[letter][letter]
 
@@ -34,8 +34,8 @@ February 2011. In earlier versions, you had to use
 Pre-defined paper sizes
 -----------------------
 
-Both `A4` and `letter` are predefined paper sizes. \CONTEXT{} also predefines
-many commonly used paper sizes. These include:
+Both `A4` and `letter` are predefined paper sizes. \CONTEXT{} predefines
+many other commonly used paper sizes. These include:
 
 - `letter`, `ledger`, `tabloid`, `legal`, `folio`, and `executive` sizes from
   the North American paper standard;
@@ -79,7 +79,7 @@ defined using `\definepapersize`. For example, `A4` paper is defined as:
 
     \definepapersize [A4]  [width=210mm,height=297mm]
     
-Use this new paper size as any of the predefined paper sizes. For example, to
+Use this new paper size like any of the predefined paper sizes. For example, to
 set the paper size to 50mm x 100mm paper, use
 
     \setuppapersize[exotic]
@@ -96,7 +96,7 @@ Changing paper setup mid-document
 =======================================
 
 Normally, the paper size is set up once---in the environment file---and doesn't
-need to changed later. But, occasionally, changing paper size mid-document is
+need to be changed later. But, occasionally, changing paper size mid-document is
 needed; for example, to insert a table or a figure in landscape mode.
 There are two ways to change the paper size mid-document.
 To illustrate those, let us first define two paper sizes for convenience:
@@ -104,8 +104,7 @@ To illustrate those, let us first define two paper sizes for convenience:
     \setuppapersize[main] [A4]
     \setuppapersize[extra][A4,landscape]
 
-One way to change document size is to permanently change the paper size using
-`\setuppapersize` and then revert back using `\setuppapersize`.
+One way to change the document size mid-document is simply to call
 
     % Set the default paper size
     \setuppapersize[main]
@@ -134,10 +133,9 @@ The `\page` before `\setuppapersize` is necessary as `\setuppapersize` changes
 the size of the current page. 
 
 Often times, a different paper size is needed only for one page. Rather than
-manually switching the paper size back and forth using `\setuppapersize`, an
-alternative is to use `\adaptpapersize` that automatically reverts back to the
-existing paper size after _one_ page. This is illustrated by the following
-example.
+manually switching the paper size back and forth using `\setuppapersize`, a
+convenient alternative is to use `\adaptpapersize`, which automatically reverts back to the
+existing paper size after _one_ page. For example:
 
     \setuppapersize[main]
     \starttext
@@ -155,12 +153,14 @@ Setting print size
 ==================
 
 Occasionally you may want to print on a larger paper than the actual page size.
-This could be because you want to print until the edge of the page---so you
+This could be because you want to print to the edge of the page---so you
 print on a large paper and crop later---or because the page size that you are
-using is not standard. For example, suppose you want to print an `A5` page on a
+using is not standard. 
+
+For example, suppose you want to print an `A5` page on a
 `A4` paper (and crop later). For that, you need to specify that the paper size
-is `A5` but the _print paper_ size is `A4`. This information is specified using
-the two argument version of the `\setuppapersize` command:
+is `A5` but the _print paper_ size is `A4`. This information is specified with
+the two argument version of the `\setuppapersize`:
 
     \setuppapersize[A5][A4]
 
@@ -185,7 +185,7 @@ that the page paper is moved appropriately on even pages.
 Crop marks
 ---------
 
-To get crop marks (also called cut marks) use
+To get crop marks (also called cut marks): 
 
     \setuplayout[marking=on]
 
@@ -203,16 +203,16 @@ If you want just the crop marks, and no other text, use
 Defining page and print size combinations
 -----------------------------------------
 
-It is convenient to define paper-size print-paper-size combination for later
+It is convenient to define paper-size/print-paper-size combination for later
 reuse. These are also defined using `\definepapersize`. For example, suppose you
-want to define two paper-size print-paper-size combinations: `A4` paper on `A4`
+want to define two paper-size/print-paper-size combinations: `A4` paper on `A4`
 print paper for normal work flow, and `A4` paper on `A3` print paper for the
 final proofs. For that, use the following:
 
     \definepapersize[regular][A4][A4]
     \definepapersize[proof]  [A4][A3]
 
-You can then combine these paper sizes with modes[^modes]:
+You can then combine these paper sizes with modes:[^modes]
 
     \setuppapersize[regular]
     \doifmode{proof}{\setuppapersize[proof]}
