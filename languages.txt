@@ -1,0 +1,3 @@
+Talk about multi-lingual interface for ConTeXt
+
+And also talk about switching the mainlanguage.
