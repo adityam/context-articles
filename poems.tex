@@ -1,0 +1,124 @@
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+% I prefer emphasized text to be italic rather than slanted
+\setupbodyfontenvironment[default][em=italic]
+
+% ConTeXt uses some weird rules for breaking urls. A small attempt to sanitize
+% that
+
+\sethyphenatedurlafter /
+\sethyphenatedurlafter .
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+%\setvariables
+%   [tugboat]
+%   [year=\tubyear,
+%    volume=\tubvol,
+%    number=\tubnum,
+%    page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Typesetting poems},
+     author={Aditya Mahajan},
+    address={},
+      email={adityam (at) ieee (dot) org},
+  ]
+
+\starttext
+\StartArticle
+\subject{Basic setup}
+
+\CONTEXT{} does not have a dedicated environment for typesetting
+poems. But, it is easy to piggyback on the \type{lines} environment
+to typeset poems. I'll use the first four stanzas from Inferno,
+which is the first part Dante's poem Divine Comedy.
+
+\startbuffer[inferno]
+Midway upon the journey of our life 
+I found myself within a forest dark, 
+For the straightforward pathway had been lost. 
+
+Ah me! how hard a thing it is to say 
+What was this forest savage, rough, and stern, 
+Which in the very thought renews the fear. 
+
+So bitter is it, death is little more; 
+But of the good to treat, which there I found, 
+Speak will I of the other things I saw there.
+
+I cannot well repeat how there I entered, 
+So full was I of slumber at the moment 
+In which I had abandoned the true way. 
+\stopbuffer
+
+The simplest way to typeset a poem is using the \type{lines}
+environment.
+
+\starttyping
+\startlines
+....
+\stoplines
+\stoptyping
+
+\noindentation which gives
+
+\startlines
+Midway upon the journey of our life 
+I found myself within a forest dark, 
+For the straightforward pathway had been lost. 
+
+Ah me! how hard a thing it is to say 
+What was this forest savage, rough, and stern, 
+Which in the very thought renews the fear. 
+\stoplines
+
+\subsubject{Indenting lines}
+
+\setuplines[indenting=even]
+\startlines
+All that is gold does not glitter,
+Not all those who wander are lost;
+The old that is strong does not wither,
+Deep roots are not reached by the ]frost.
+
+From the ashes a fire shall be woken,
+A light from the shadows shall spring;
+Renewed shall be blade that was broken,
+The crownless again shall be king.
+\stoplines
+
+\subsubject{Indenting stanzas}
+
+\defineindentingmethod [toggle] {\ifdim\parindent=\zeropoint\relax
+                                    \parindent\ctxparindent\relax
+                                  \else\parindent\zeropoint\relax
+                                  \fi} % no \indent !
+
+
+% \setuplines 
+%  [option=packed, 
+%   inbetween={\blank[preference,line]\setupindenting[next]}, 
+%   indenting=next]
+
+\setuplines 
+ [option=packed,
+  inbetween={\blank[preference,line]\setupindenting[toggle]},
+  indenting=no]
+
+\startlines
+\getbuffer[inferno]
+\stoplines
+
+\subsubject{Keeping Stanzas together}
+
+\setuplines[option=packed]
+\StopArticle
+\stoptext
+
