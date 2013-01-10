@@ -1,0 +1,49 @@
+\usemodule[abr-03]
+\usemodule[tugboat]
+
+% I prefer emphasized text to be italic rather than slanted
+\setupbodyfontenvironment[default][em=italic]
+
+% \CONTEXT\ uses some weird rules for breaking urls. A small attempt to sanitize
+% that
+
+\sethyphenatedurlafter /
+\sethyphenatedurlafter .
+
+\setvariables
+  [tugboat]
+  [type=article,
+   columns=yes,
+   grid=no]
+
+%\setvariables
+%   [tugboat]
+%   [year=\tubyear,
+%    volume=\tubvol,
+%    number=\tubnum,
+%    page=\tubpage]
+
+\setvariables
+  [tugboat]
+  [   title={\CONTEXT\ basics for users: Using fugures},
+     author={Aditya Mahajan},
+    address={},
+      email={adityam (at) ieee (dot) org},
+  ]
+
+\starttext
+\StartArticle
+
+\StartAbstract
+  As the cliché goes, a picture is worth a thousand words. In this article, I
+  explain how to add a picture to a \CONTEXT\ document. To keep things simple,
+  I'll only explain how things work with \CONTEXT\ MkIV: LuaTeX engine and PDF
+  output. Most of the usage remains the same for other engines---PDFTeX and
+  XeTeX. but tracing and automatic conversion does not work---and for other
+  output formats---DVI, but not all image formats are supported. 
+\StopAbstract
+
+\section {Basic usage}
+
+\StopArticle
+\stoptext
