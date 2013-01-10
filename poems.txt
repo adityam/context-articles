@@ -27,16 +27,75 @@ So full was I of slumber at the moment
 In which I had abandoned the true way. 
 \stopbuffer
 
-\typebuffer[inferno]
-
 The simplest way to typeset a poem is using the `lines` environment.
 
     \startlines
     ....
     \stoplines
 
-which gives
+\noindentation which gives
 
 \startlines
-\getbuffer[inferno]
+Midway upon the journey of our life 
+I found myself within a forest dark, 
+For the straightforward pathway had been lost. 
+     
+Ah me! how hard a thing it is to say 
+What was this forest savage, rough, and stern, 
+Which in the very thought renews the fear. 
 \stoplines
+
+Indenting lines
+---------------
+
+\setuplines[indenting=even]
+\startlines
+All that is gold does not glitter,
+Not all those who wander are lost;
+The old that is strong does not wither,
+Deep roots are not reached by the ]frost.
+
+From the ashes a fire shall be woken,
+A light from the shadows shall spring;
+Renewed shall be blade that was broken,
+The crownless again shall be king.
+\stoplines
+
+Indenting stanzas
+-----------------
+\defineindentingmethod [toggle] {\ifdim\parindent\zeropoint\relax\parindent\ctxparindent\relax\else\parindent\zeropoint\relax} % no \indent !
+
+
+% \setuplines 
+%  [option=packed, 
+%   inbetween={\blank[preference,line]\setupindenting[next]}, 
+%   indenting=next]
+
+\setuplines 
+ [option=packed, 
+  indenting=toggle]
+
+\startlines
+Midway upon the journey of our life 
+I found myself within a forest dark, 
+For the straightforward pathway had been lost. 
+     
+Ah me! how hard a thing it is to say 
+What was this forest savage, rough, and stern, 
+Which in the very thought renews the fear. 
+
+So bitter is it, death is little more; 
+But of the good to treat, which there I found, 
+Speak will I of the other things I saw there.
+
+I cannot well repeat how there I entered, 
+So full was I of slumber at the moment 
+In which I had abandoned the true way. 
+\stoplines
+
+
+Keeping Stanzas together
+------------------------
+
+   \setuplines[option=packed]
+

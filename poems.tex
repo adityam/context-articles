@@ -96,17 +96,6 @@ The crownless again shall be king.
 
 \subsubject{Indenting stanzas}
 
-\defineindentingmethod [toggle] {\ifdim\parindent=\zeropoint\relax
-                                    \parindent\ctxparindent\relax
-                                  \else\parindent\zeropoint\relax
-                                  \fi} % no \indent !
-
-
-% \setuplines 
-%  [option=packed, 
-%   inbetween={\blank[preference,line]\setupindenting[next]}, 
-%   indenting=next]
-
 \setuplines 
  [option=packed,
   inbetween={\blank[preference,line]\setupindenting[toggle]},
@@ -116,9 +105,25 @@ The crownless again shall be king.
 \getbuffer[inferno]
 \stoplines
 
+\section{Indenting all but the first line}
+
+% \setuplines 
+%  [option=packed, 
+%   inbetween={\blank[preference,line]\setupindenting[next]}, 
+%   indenting=next]
+
 \subsubject{Keeping Stanzas together}
 
 \setuplines[option=packed]
+
+\subsubject{Centering poems}
+
+\setuplines[align=middle, inbetween=\blank, indenting=no]
+
+\startlines
+\getbuffer[inferno]
+\stoplines
+
 \StopArticle
 \stoptext
 
