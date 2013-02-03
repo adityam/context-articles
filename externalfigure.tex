@@ -1,9 +1,6 @@
 \usemodule[abr-03]
 \usemodule[tugboat]
 
-% I prefer emphasized text to be italic rather than slanted
-\setupbodyfontenvironment[default][em=italic]
-
 % \CONTEXT\ uses some weird rules for breaking urls. A small attempt to sanitize
 % that
 
@@ -41,12 +38,17 @@
 \starttext
 \StartAbstract
   As the cliché goes, a picture is worth a thousand words. This article provides
-  an overview of inserting pictures or images in a \CONTEXT\ document. In contrast to the
-  previous article in this series, from now on, I assume that a \CONTEXT\ user
-  is using \CONTEXT\ \MKIV: \LUATEX\ engine and \PDF\ output. 
+  an overview of inserting pictures or images in a \CONTEXT\ document. 
 \StopAbstract
 
 \StartArticle
+
+\subject {A note about MkII and MkIV}
+
+In contrast to the previous article in this series, from now on, I assume that a
+\CONTEXT\ user is using \CONTEXT\ \MKIV: \LUATEX\ engine and \PDF\ output.
+\CONTEXT\ \MKIV\ behaves differently from \MKII, and in most cases
+provides additional features that are absent from \MKII. 
 
 \section {Basic usage}
 
@@ -84,7 +86,7 @@ To include a specific page, say page 5, of a multi-page \PDF\ file, use:
 
 These four variations cover 90\% of the use cases.
 
-\subsection {Natively supported file formats}
+\subsection[sec:native] {Natively supported file formats}
 
 \CONTEXT\ natively supports the image formats enumerated below. The image format
 is determined from the file extension (in a case insensitive manner).
@@ -100,10 +102,53 @@ is determined from the file extension (in a case insensitive manner).
     \filename{.jbig2}, or \filename{.jb2}.
 \stopitemize
 
+\subsection {Including images after conversion}
+
+The image formats listed in \in{Sec.}[sec:native] are the ones that may be
+embedded directly in a \PDF. \CONTEXT\ also supports a few other formats which
+are first converted to \PDF\ using an external program. Of course, for such an
+conversion to work, the corresponding converter must be in the \type{PATH}.
+
+% Of course, this
+% conversion works only if the corresponding external program is listed in
+% \type{content.directives.system.commandlist} list in \type{texmfcnf.lua}.
+% % AM: Is texmfcnf.lua documented anywhere?
+% If you use the \type{texmfcnf.lua} file that comes with \TEXLIVE\ or \CONTEXT\
+% standalone, you don't need to worry about this.
+
+\startsetups table
+  \setupTABLE[frame=off, align=middle]
+  \setupTABLE[row][first][topframe=on, framethickness=1.2pt, style=bold]
+  \setupTABLE[row][2][topframe=on, framethickness=0.8pt, loffset=0.5em, roffset=0.5em]
+  \setupTABLE[row][last][bottomframe=on, framethickness=1.2pt]
+  \setupTABLE[column][1][style=\cap]
+  \setupTABLE[column][3][align=flushleft, ]
+\stopsetups
+
+%AM: I don't know what the inkscape cell is not formatted correctly.
+\blank[halfline]
+\startTABLE[setups=table]
+  \NC Format \NC Extension     \NC Converter \NC \NR
+  \NC SVG    \NC \mono{.svg}, \mono{.svgz}  \NC \null\hskip-0.7em\mono{inkscape} \NC \NR
+  \NC EPS    \NC \mono{.eps}, \mono{.ai}    \NC \mono{gs} (or  \mono{gswin32c}
+      on Windows) from Ghostscript. \NC \NR
+  \NC GIF    \NC \mono{.gif}  \NC \mono{gm} from GraphicMagick  \NC \NR
+  \NC TIFF    \NC \mono{.tiff}  \NC \mono{gm} from GraphicMagick  \NC \NR
+\stopTABLE
+\blank[halfline]
+
+The conversion generates a \PDF\ file with prefix \type{m_k_i_v_} and a suffix
+\type{.pdf} added to the name of the original file. The result is cached, and
+the conversion is rerun if the timestamps of the original file is newer than that
+of the converted file.
+
+
+
 \subsection {Specifying image directories}
 
+
 By default, \CONTEXT\ searches a file in the current directory, the parent
-directory, the grand-parent directory, and the texmf tree. 
+directory, the grand-parent directory, and the \type{TEXMF} tree. 
 
 To search for the files in other directories, say \type{images/} subdirectory
 and \type{/home/user/images} directory, use:
@@ -133,7 +178,7 @@ supports reading remote files from HTTP/HTTPS servers.
 \midaligned{\getbuffer} 
 
 When a document containing a remote file is compiled for the first time, the
-remote file is downloaded from the server and stored in the luatex cache
+remote file is downloaded from the server and stored in the \LUATEX\ cache
 directory. This cached file is used during subsequent runs.
 
 % AM: Should we go into details about how to force redownloading of files?
@@ -187,6 +232,41 @@ has no affect.
 
 \subsection {Specify maximum size of an image}
 
+Oftentimes, we don't want the included image to be greater than a particular
+size. For example, to ensure that an included image is not more than
+\type{0.25\textwidth}, use:
+
+\startbuffer
+\externalfigure[cow.pdf][maxwidth=0.25\textwidth]
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+If \type{maxwidth} is specified and the width of the image is less than
+\type{maxwidth}, then the image is not scaled; if the width of the image is
+greater than \type{maxwidth}, then the width is restricted to \type{maxwidth}
+and the height is scaled appropriately to maintain the original aspect ratio.
+
+The option \type{maxheight} is similar to \type{maxwidth} but checks the height
+of the image rather than the width. 
+% For example:
+% \startbuffer
+% \externalfigure[cow.pdf][maxheight=2cm]
+% \stopbuffer
+% \typebuffer
+% 
+% \midaligned{\getbuffer}
+
+In most of my style files, I usually set:
+\starttyping
+\setupexternalfigures
+    [ maxwidth=\textwidth,
+      maxheight=0.8\textheight]
+\stoptyping
+\noindentation
+to ensure that the figures do not overflow the text area.
+
 \subsection {Rotate images}
 
 To rotate the included image by 90, 180, or 270 degrees, use the
@@ -206,9 +286,13 @@ To rotate by an arbitrary angle, use the \type{\rotate} command. For example:
 \stopbuffer
 \typebuffer
 
+% AM: Rotated image takes additional space because the bounding box of the image
+% is rotated. So, I manually remove the extra space
+\vskip -\baselineskip
 \midaligned{\getbuffer}
+\vskip -\baselineskip
 
-% TODO: Add reference to the wiki page on rotate
+% TODO: Update the wiki page on rotate and add a reference to it.
 
 \subsection {Mirror images}
 
@@ -261,14 +345,6 @@ As another example, to cut the image into a \type{3x3} pieces and include the
 
 % TODO: Add details to the wiki page on clip and refer to that.
 
-\section {Intermediate usage}
-
-\subsection {Omit the file extension}
-
-\subsection {Convert file format}
-
-\subsection {factor}
-
 \section {Troubleshooting}
 
 \subsection {Visualize the bounding box of the image}
@@ -296,11 +372,81 @@ space around the trimmed image.
 A similar functionality is provided by another Perl script \type{pdfcrop} that
 is part of most \TEX\ distributions.
 
-\subsection {Images at the beginning of a paragraph}
-
-\subsection {What happens when an image is not found}
 
 \subsection {Tracking what is happening}
+
+To get diagnostic information about inclusion of images, enable the tracker
+\type{graphics.locating} by either adding
+\starttyping
+\enabletrackers[graphics.locating]
+\stoptyping
+\noindentation
+in the \CONTEXT\ file, or by compiling the \CONTEXT\ file using the command
+\startlines\switchtobodyfont[small]\tt
+context {\sl --trackers=graphics.locating} filename
+\stoplines
+
+\indentation
+The \type{graphics.locating} tracker outputs diagnostic information to the
+console. Suppose we use \type{\externalfigure[somefile.pdf]} and \CONTEXT\ finds
+the file in the current search path, then the following information is printed
+on the console:
+% AM: Urgh. Footnotes don't work properly in TL'12
+(The tracking messages are formatted to typeset
+nicely. The actual messages are displayed differently.)
+\starttyping
+graphics > inclusion > locations: local,global
+graphics > inclusion > path list: . .. ../..
+graphics > inclusion > strategy: forced format pdf
+graphics > inclusion > found: somefile.pdf -> 
+                                      somefile.pdf
+graphics > inclusion > format natively supported
+                                    by backend: pdf
+\stoptyping
+
+If the file \type{somefile.pdf} is not found in the current
+search path, then the following information is printed on the
+console
+%\note[formatting]
+(even if \type{graphics.locating} tracker is not set)
+\starttyping
+graphics > inclusion > strategy: forced format pdf
+graphics > inclusion > not found: somefile.pdf
+graphics > inclusion > not found: ./somefile.pdf
+graphics > inclusion > not found: ../somefile.pdf
+graphics > inclusion > not found: ../../somefile.pdf
+graphics > inclusion > not found: images/somefile.pdf
+graphics > inclusion > not found: 
+                       /home/user/images/somefile.pdf
+graphics > inclusion > format not supported: 
+\stoptyping
+\noindentation
+and a placeholder gray box is shown in the \PDF\ output: 
+
+\midaligned{\externalfigure[somefile.pdf]}
+
+\subsection {Images at the beginning of a paragraph}
+
+An \type{\externalfigure[...]} at the beginning of a paragraph leads to a line
+break after the image. This is because \type{\externalfigure} is a \type{\vbox}
+and when \TEX\ encounters a \type{\vbox} at the beginning of a paragraph, it
+switches to vertical-mode. To prevent this, simply add \type{\dontleavehmode}
+before \type{\externalfigure}, thus:
+\starttyping
+\dontleavehmode\externalfigure[...] ... the first line 
+\stoptyping
+
+% \section    {Advanced features}
+% \subsection {Omit the file extension}
+% \subsection {useexternalfigure}
+% \subsection {defineexternalfigure}
+
+\section {Conclusion}
+
+In this article, I briefly explained how to include images in your document. In
+most cases, one wants to the included images to have a number and a
+caption---i.e., to display the image in a float. I will discuss floats in one of
+the future articles in this series.
 
 
 \StopArticle
