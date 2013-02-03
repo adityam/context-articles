@@ -25,25 +25,283 @@
 
 \setvariables
   [tugboat]
-  [   title={\CONTEXT\ basics for users: Using fugures},
+  [   title={\CONTEXT\ basics for users: Using images},
      author={Aditya Mahajan},
     address={},
       email={adityam (at) ieee (dot) org},
   ]
 
-\starttext
-\StartArticle
+% AM: It is distracting to add width in all examples. So, I prespecify the width
+% of the images. I use the figure name as the figure label; so that the reader
+% of the document would not notice that we are using figure labels.
+\useexternalfigure[http://www.tug.org/images/tuglogo.png]
+                  [http://www.tug.org/images/tuglogo.png]
+                  [scale=2000]
 
+\starttext
 \StartAbstract
-  As the cliché goes, a picture is worth a thousand words. In this article, I
-  explain how to add a picture to a \CONTEXT\ document. To keep things simple,
-  I'll only explain how things work with \CONTEXT\ MkIV: LuaTeX engine and PDF
-  output. Most of the usage remains the same for other engines---PDFTeX and
-  XeTeX. but tracing and automatic conversion does not work---and for other
-  output formats---DVI, but not all image formats are supported. 
+  As the cliché goes, a picture is worth a thousand words. This article provides
+  an overview of inserting pictures or images in a \CONTEXT\ document. In contrast to the
+  previous article in this series, from now on, I assume that a \CONTEXT\ user
+  is using \CONTEXT\ \MKIV: \LUATEX\ engine and \PDF\ output. 
 \StopAbstract
 
+\StartArticle
+
 \section {Basic usage}
+
+The simplest way to insert an image is to use:
+\startbuffer
+\externalfigure[context-logo.pdf]
+\stopbuffer
+
+\typebuffer
+
+\midaligned{\getbuffer}
+
+This command places the \PDF\ image \filename{context-logo.pdf} in a
+\type{\vbox}; the width and height of the image are equal to the natural
+dimensions of the image.
+
+To set the width of the image to a specific size, say \type{1cm}, use:
+\starttyping
+\externalfigure[context-logo.pdf][width=1cm]
+\stoptyping
+
+\noindentation
+Similarly, to set the height of the image to a specific size, say \type{2cm}, use:
+\starttyping
+\externalfigure[context-logo.pdf][height=2cm]
+\stoptyping
+
+If only the \type{width} or \type{height} of the image is specified, the other
+dimension is scaled appropriately to keep the aspect ratio.
+
+To include a specific page, say page 5, of a multi-page \PDF\ file, use:
+\starttyping
+\externalfigure[context-logo.pdf][page=5]
+\stoptyping
+
+These four variations cover 90\% of the use cases.
+
+\subsection {Natively supported file formats}
+
+\CONTEXT\ natively supports the image formats enumerated below. The image format
+is determined from the file extension (in a case insensitive manner).
+% AM: Should we change this to a table?
+\startitemize[nowhite]
+  \item \cap{PDF}: File extension \filename{.pdf}
+  \item \cap{MPS} (Metapost output): File extension \filename{.mps} or
+    \filename{.[digit]}.
+  \item \cap{JPEG}: File extension \filename{.jpg} or \filename{.jpeg}.
+  \item \cap{PNG}: File exetension \filename{.png}
+  \item \cap{JPEG 2000}: File extension \filename{.jp2}
+  \item \cap{JBIG} or \cap{JBIG2}: File extension \filename{.jbig},
+    \filename{.jbig2}, or \filename{.jb2}.
+\stopitemize
+
+\subsection {Specifying image directories}
+
+By default, \CONTEXT\ searches a file in the current directory, the parent
+directory, the grand-parent directory, and the texmf tree. 
+
+To search for the files in other directories, say \type{images/} subdirectory
+and \type{/home/user/images} directory, use:
+\startbuffer
+\setupexternalfigures
+      [directory={images, /home/user/images}]
+\stopbuffer
+
+\typebuffer
+
+Note that one should always use forward slashes in path names, {\em even on
+Windows}.
+
+% AM: Find out!
+% To disable searching of files in the texmf tree, use
+
+\subsection {Include remote images}
+
+Like all other \CONTEXT\ macros that read files, \type{\externalfiguure} also
+supports reading remote files from HTTP/HTTPS servers. 
+
+\startbuffer
+\externalfigure[http://www.tug.org/images/tuglogo.png]
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer} 
+
+When a document containing a remote file is compiled for the first time, the
+remote file is downloaded from the server and stored in the luatex cache
+directory. This cached file is used during subsequent runs.
+
+% AM: Should we go into details about how to force redownloading of files?
+
+\section {Transform images}
+
+\subsection {Scale images}
+
+To scale an image use the \type{scale} key: \type{scale=1000} corresponds to the
+original dimensions of the image; \type{scale=500} scales the image to
+\type{50%} of the original size; \type{scale=1500} scales the images to
+\type{150%} of its original size; and so on. For example: 
+
+\startbuffer
+\externalfigure[context-logo.pdf][scale=500]
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+Use \type{\setupexternalfigures} to set the scale of all images. For example,
+to scale all images to be twice their original size, use:
+\starttyping
+\setupexternalfigures
+    [scale=2000]
+\stoptyping
+
+In addition, the \type{xscale} and \type{yscale} keys scale the image only in
+one dimension. For example:
+
+\startbuffer[x]
+\externalfigure[context-logo.pdf][xscale=500]
+\stopbuffer
+%\typebuffer
+
+\startbuffer[y]
+\externalfigure[context-logo.pdf][yscale=500]
+\stopbuffer
+%\typebuffer
+
+\midaligned\bgroup
+  \setupcombination[distance=3em]
+  \startcombination[2]
+    {\getbuffer[x]}{\type{xscale=500}}
+    {\getbuffer[y]}{\type{yscale=500}}
+  \stopcombination
+\egroup
+
+If either \type{width} or \type{height} is specified, then the \type{scale} key
+has no affect. 
+
+\subsection {Specify maximum size of an image}
+
+\subsection {Rotate images}
+
+To rotate the included image by 90, 180, or 270 degrees, use the
+\type{orientation} key. For example:
+\startbuffer
+\externalfigure[context-logo.pdf][orientation=90]
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+To rotate by an arbitrary angle, use the \type{\rotate} command. For example:
+% AM: Interesting anti-aliasing at 100% zoom on evince.
+% Goes away at 300% zoom.
+\startbuffer
+\rotate[rotation=45]{\externalfigure[context-logo.pdf]}
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+% TODO: Add reference to the wiki page on rotate
+
+\subsection {Mirror images}
+
+The \type{\externalfigure} macro does not provide any support for flipping
+images. Use the generic \type{\mirror} command to mirror images. For example, to
+mirror horizontally use:
+\startbuffer
+\mirror{\externalfigure[context-logo.pdf]}
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+\noindentation and to mirror vertically, first rotate the image by 180° and then
+mirror it:
+\startbuffer
+\mirror{\externalfigure[context-logo.pdf]
+                       [orientation=180]}
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+% TODO: Add reference to the wiki page on mirror
+
+\subsection {Clip images}
+
+The \type{\externalfigure} macro does not provide any support for clipping
+images. Use the generic \type{\clip} command to clip images. 
+
+For example, to clip the original image to a \type{1cm x 2cm}
+rectangle at an offset of \type{(3mm, 5mm)} from the top left corner, use:
+\startbuffer
+\clip[width=1cm, height=2cm, hoffset=3mm, voffset=5mm]
+     {\externalfigure[context-logo.pdf]}
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+As another example, to cut the image into a \type{3x3} pieces and include the
+\type{(2,2)} piece, use:
+\startbuffer
+\clip[nx=3,ny=3,x=2,y=2]
+     {\externalfigure[context-logo.pdf]}
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+% TODO: Add details to the wiki page on clip and refer to that.
+
+\section {Intermediate usage}
+
+\subsection {Omit the file extension}
+
+\subsection {Convert file format}
+
+\subsection {factor}
+
+\section {Troubleshooting}
+
+\subsection {Visualize the bounding box of the image}
+
+In some situation, e.g., if the image is taking more space than expected, it is
+useful to visualize the bounding box of the image. To do so, use:
+\startbuffer
+\externalfigure[context-logo.pdf][frame=on]
+\stopbuffer
+\typebuffer
+
+\midaligned{\getbuffer}
+
+\CONTEXT\ includes a Perl script \type{pdftrimwhite} that may be used to
+remove extra white space around a \PDF\ file. To run this script, type:
+\startlines\switchtobodyfont[small]\tt
+mtxrun --script pdftrimwhite {\it [flags]} {\it input} {\it output}
+\stoplines
+
+\noindentation
+
+The most important flag is \type{--offset=<dimen>} that keeps some extra
+space around the trimmed image.
+
+A similar functionality is provided by another Perl script \type{pdfcrop} that
+is part of most \TEX\ distributions.
+
+\subsection {Images at the beginning of a paragraph}
+
+\subsection {What happens when an image is not found}
+
+\subsection {Tracking what is happening}
+
 
 \StopArticle
 \stoptext
