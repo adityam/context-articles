@@ -31,6 +31,7 @@
 % AM: It is distracting to add width in all examples. So, I prespecify the width
 % of the images. I use the figure name as the figure label; so that the reader
 % of the document would not notice that we are using figure labels.
+\useexternalfigure[logo.pdf][context-logo.pdf]
 \useexternalfigure[http://www.tug.org/images/tuglogo.png]
                   [http://www.tug.org/images/tuglogo.png]
                   [scale=2000]
@@ -54,26 +55,26 @@ provides additional features that are absent from \MKII.
 
 The simplest way to insert an image is to use:
 \startbuffer
-\externalfigure[context-logo.pdf]
+\externalfigure[logo.pdf]
 \stopbuffer
 
 \typebuffer
 
 \midaligned{\getbuffer}
 
-This command places the \PDF\ image \filename{context-logo.pdf} in a
+This command places the \PDF\ image \filename{logo.pdf} in a
 \type{\vbox}; the width and height of the image are equal to the natural
 dimensions of the image.
 
 To set the width of the image to a specific size, say \type{1cm}, use:
 \starttyping
-\externalfigure[context-logo.pdf][width=1cm]
+\externalfigure[logo.pdf][width=1cm]
 \stoptyping
 
 \noindentation
 Similarly, to set the height of the image to a specific size, say \type{2cm}, use:
 \starttyping
-\externalfigure[context-logo.pdf][height=2cm]
+\externalfigure[logo.pdf][height=2cm]
 \stoptyping
 
 If only the \type{width} or \type{height} of the image is specified, the other
@@ -81,7 +82,7 @@ dimension is scaled appropriately to keep the aspect ratio.
 
 To include a specific page, say page 5, of a multi-page \PDF\ file, use:
 \starttyping
-\externalfigure[context-logo.pdf][page=5]
+\externalfigure[logo.pdf][page=5]
 \stoptyping
 
 These four variations cover 90\% of the use cases.
@@ -193,7 +194,7 @@ original dimensions of the image; \type{scale=500} scales the image to
 \type{150%} of its original size; and so on. For example: 
 
 \startbuffer
-\externalfigure[context-logo.pdf][scale=500]
+\externalfigure[logo.pdf][scale=500]
 \stopbuffer
 \typebuffer
 
@@ -210,12 +211,12 @@ In addition, the \type{xscale} and \type{yscale} keys scale the image only in
 one dimension. For example:
 
 \startbuffer[x]
-\externalfigure[context-logo.pdf][xscale=500]
+\externalfigure[logo.pdf][xscale=500]
 \stopbuffer
 %\typebuffer
 
 \startbuffer[y]
-\externalfigure[context-logo.pdf][yscale=500]
+\externalfigure[logo.pdf][yscale=500]
 \stopbuffer
 %\typebuffer
 
@@ -237,7 +238,7 @@ size. For example, to ensure that an included image is not more than
 \type{0.25\textwidth}, use:
 
 \startbuffer
-\externalfigure[cow.pdf][maxwidth=0.25\textwidth]
+\externalfigure[logo.pdf][maxwidth=0.2\textwidth]
 \stopbuffer
 \typebuffer
 
@@ -272,7 +273,7 @@ to ensure that the figures do not overflow the text area.
 To rotate the included image by 90, 180, or 270 degrees, use the
 \type{orientation} key. For example:
 \startbuffer
-\externalfigure[context-logo.pdf][orientation=90]
+\externalfigure[logo.pdf][orientation=90]
 \stopbuffer
 \typebuffer
 
@@ -282,7 +283,7 @@ To rotate by an arbitrary angle, use the \type{\rotate} command. For example:
 % AM: Interesting anti-aliasing at 100% zoom on evince.
 % Goes away at 300% zoom.
 \startbuffer
-\rotate[rotation=45]{\externalfigure[context-logo.pdf]}
+\rotate[rotation=45]{\externalfigure[logo.pdf]}
 \stopbuffer
 \typebuffer
 
@@ -300,7 +301,7 @@ The \type{\externalfigure} macro does not provide any support for flipping
 images. Use the generic \type{\mirror} command to mirror images. For example, to
 mirror horizontally use:
 \startbuffer
-\mirror{\externalfigure[context-logo.pdf]}
+\mirror{\externalfigure[logo.pdf]}
 \stopbuffer
 \typebuffer
 
@@ -309,8 +310,7 @@ mirror horizontally use:
 \noindentation and to mirror vertically, first rotate the image by 180° and then
 mirror it:
 \startbuffer
-\mirror{\externalfigure[context-logo.pdf]
-                       [orientation=180]}
+\mirror{\externalfigure[logo.pdf][orientation=180]}
 \stopbuffer
 \typebuffer
 
@@ -327,7 +327,7 @@ For example, to clip the original image to a \type{1cm x 2cm}
 rectangle at an offset of \type{(3mm, 5mm)} from the top left corner, use:
 \startbuffer
 \clip[width=1cm, height=2cm, hoffset=3mm, voffset=5mm]
-     {\externalfigure[context-logo.pdf]}
+     {\externalfigure[logo.pdf]}
 \stopbuffer
 \typebuffer
 
@@ -337,7 +337,7 @@ As another example, to cut the image into a \type{3x3} pieces and include the
 \type{(2,2)} piece, use:
 \startbuffer
 \clip[nx=3,ny=3,x=2,y=2]
-     {\externalfigure[context-logo.pdf]}
+     {\externalfigure[logo.pdf]}
 \stopbuffer
 \typebuffer
 
@@ -352,7 +352,7 @@ As another example, to cut the image into a \type{3x3} pieces and include the
 In some situation, e.g., if the image is taking more space than expected, it is
 useful to visualize the bounding box of the image. To do so, use:
 \startbuffer
-\externalfigure[context-logo.pdf][frame=on]
+\externalfigure[logo.pdf][frame=on]
 \stopbuffer
 \typebuffer
 
