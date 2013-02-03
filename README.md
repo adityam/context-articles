@@ -23,7 +23,7 @@ Tug 2009
 [Table Macros II]:http://www.tug.org/TUGboat/Articles/tb29-1/tb91mahajan.pdf
 [Indentation]:http://www.tug.org/TUGboat/Articles/tb29-2/tb92mahajan.pdf
 [Conditional Processing]: http://www.tug.org/TUGboat/Articles/tb31-1/tb97mahajan.pdf
-[Paper setup]: https://www.tug.org/members/TUGboat/tb32-1/tb101mahajan.pdf
+[Paper setup]: http://www.tug.org/TUGboat/tb32-2/tb101mahajan.pdf
 
 [Opentype Math]:http://www.tug.org/members/TUGboat/tb30-2/tb95mahajan-cmath.pdf
 [LuaTeX]:http://www.tug.org/members/TUGboat/tb30-2/tb95mahajan-luatex.pdf 
